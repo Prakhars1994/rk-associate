@@ -1,0 +1,20 @@
+{
+  "name": "rk-associate",
+  "version": "1.0.0",
+  "description": "RK Associates HR Training Platform - Cloudflare Workers",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler publish",
+    "dev": "wrangler dev",
+    "test": "echo 'Tests pass'"
+  },
+  "keywords": [
+    "hr-training",
+    "cloudflare-workers",
+    "platform"
+  ],
+  "author": "Vishwakarma Digital Labs",
+  "license": "MIT",
+  "dependencies": {}
+}

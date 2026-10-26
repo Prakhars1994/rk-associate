@@ -1,0 +1,11 @@
+name = "rk-associate"
+type = "javascript"
+account_id = "ac58b62e8f62115bb2a73be4a5202360"
+workers_dev = true
+route = "*rk-associate.vliab.workers.dev/*"
+zone_id = ""
+main = "src/index.js"
+
+[build]
+command = ""
+cwd = ""
