@@ -132,9 +132,68 @@ footer p { color: var(--rk-ink-3); }
   section.hero { padding: 84px 20px 72px !important; }
   body:not(:has(> header)) > .container { padding: 32px 22px !important; }
 }
+/* ===== v2: bolder red (about 25% red, 75% white) ===== */
+:root { --rk-grad: linear-gradient(135deg, #8E0010 0%, #C4001A 45%, #E8112D 75%, #FF3B30 100%); --rk-red-deep: #7A000D; }
+body::before { content: ''; position: fixed; inset: 0 0 auto 0; height: 3px; background: var(--rk-grad); z-index: 200; }
+.logo::before { background: var(--rk-grad); box-shadow: 0 4px 12px rgba(215,0,21,.35); }
+nav a.btn-login, nav a[style*="background"] { background: var(--rk-grad) !important; box-shadow: 0 6px 16px rgba(215,0,21,.28); }
+
+/* Hero: rich red with light bloom */
+.hero { background: radial-gradient(900px 420px at 80% 0%, rgba(255,120,110,.45), transparent 60%), radial-gradient(700px 400px at 0% 100%, rgba(0,0,0,.25), transparent 60%), var(--rk-grad) !important; color: #fff !important; }
+.hero::after { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.10) 1px, transparent 1px); background-size: 22px 22px; mask-image: linear-gradient(to bottom, #000, transparent 85%); -webkit-mask-image: linear-gradient(to bottom, #000, transparent 85%); pointer-events: none; }
+.hero > * { position: relative; z-index: 1; }
+.hero::before { background: rgba(255,255,255,.16) !important; color: #fff !important; border: 1px solid rgba(255,255,255,.28); backdrop-filter: blur(8px); position: relative; z-index: 1; }
+.hero h1 { color: #fff !important; text-shadow: 0 2px 30px rgba(0,0,0,.18); }
+.hero p { color: rgba(255,255,255,.88) !important; }
+.hero .btn-primary { background: #fff !important; color: var(--rk-red) !important; font-weight: 600 !important; box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+.hero .btn-primary:hover { background: #fff !important; transform: translateY(-2px); }
+.hero .btn-primary + .btn-primary { background: rgba(255,255,255,.08) !important; color: #fff !important; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.7); }
+.hero .btn-primary + .btn-primary:hover { background: rgba(255,255,255,.16) !important; }
+
+/* Section headings get a red accent bar */
+section h2::after, .container > h1:not(header h1)::after { content: ''; display: block; width: 56px; height: 4px; border-radius: 4px; margin: 18px auto 0; background: var(--rk-grad); }
+.courses-section h2::after { margin-left: 0; }
+
+/* Stats band: deep red */
+.about { background: linear-gradient(180deg, #fff 0%, #fff 30%, var(--rk-red-tint) 100%) !important; }
+.about .stats { background: var(--rk-grad); border-radius: 24px; padding: 28px 12px; box-shadow: 0 20px 50px rgba(215,0,21,.25); }
+.about .stat-number { color: #fff !important; }
+.about .stat p { color: rgba(255,255,255,.85) !important; }
+
+/* Cards: red top edge, red prices, solid red icon tiles */
+.course-card, .card, .stat-card, .course-item { position: relative; overflow: hidden; }
+.course-card::before, .stat-card::before, .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--rk-grad); }
+.price { color: var(--rk-red) !important; }
+.resource-card h3 .rk-icon { background: var(--rk-grad) !important; color: #fff !important; box-shadow: 0 8px 18px rgba(215,0,21,.25); }
+.course-card:hover, .resource-card:hover { box-shadow: 0 24px 60px rgba(215,0,21,.14) !important; border-color: rgba(215,0,21,.25); }
+.btn, .btn-primary, button:not(.tab-btn) { background: var(--rk-grad) !important; box-shadow: 0 6px 16px rgba(215,0,21,.22); }
+.btn:hover, .btn-primary:hover, button:not(.tab-btn):hover { filter: brightness(1.06); }
+
+/* Resources band: red tint */
+section[style*="background"] { background: var(--rk-red-tint) !important; }
+
+/* Contact: info column becomes a red panel */
+.contact-grid > div:first-child { background: var(--rk-grad); color: #fff; padding: 36px; border-radius: 24px; box-shadow: 0 20px 50px rgba(215,0,21,.22); }
+.contact-grid > div:first-child h3, .contact-grid > div:first-child p, .contact-grid > div:first-child strong { color: #fff !important; }
+.contact-grid > div:first-child p { margin-bottom: 10px; opacity: .92; }
+
+/* Footer: deep red */
+footer { background: linear-gradient(180deg, var(--rk-red-deep), #4A0008) !important; color: rgba(255,255,255,.75) !important; border-top: none; }
+footer p { color: rgba(255,255,255,.75) !important; }
+
+/* App headers (dashboard, admin, portal): red bar */
+header:not(:has(.logo)) { background: var(--rk-grad) !important; border-bottom: none; color: #fff !important; }
+header:not(:has(.logo)) h1, header:not(:has(.logo)) div, header:not(:has(.logo)) span { color: #fff !important; }
+header:not(:has(.logo)) a[style*="color: white"] { color: #fff !important; background: rgba(255,255,255,.16); padding: 7px 16px; border-radius: 980px; }
+.stat-number, .card .number { color: var(--rk-red) !important; }
+th { background: var(--rk-grad) !important; color: #fff !important; }
+.tab-btn.active { background: var(--rk-grad) !important; color: #fff !important; box-shadow: 0 6px 16px rgba(215,0,21,.25); }
+
+/* Auth + checkout: red top half, white card floating over it */
+body:not(:has(> header)) { background: linear-gradient(180deg, transparent 0 46%, var(--rk-gray-bg) 46%), radial-gradient(800px 400px at 85% 0%, rgba(255,120,110,.45), transparent 60%), var(--rk-grad) !important; background-attachment: fixed !important; }
 `;
 
-const RK_HEAD = `<meta name="theme-color" content="#ffffff"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"><link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css"><style>${CSS}</style>`;
+const RK_HEAD = `<meta name="theme-color" content="#C4001A"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"><link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css"><style>${CSS}</style>`;
 
 const RK_FOOT = `<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script><script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script><script>(function(){try{if(window.lucide)lucide.createIcons();if(window.AOS){document.querySelectorAll('.course-card,.resource-card,.card,.stat-card,.course-item,section h2,.stat').forEach(function(el,i){el.setAttribute('data-aos','fade-up');el.setAttribute('data-aos-delay',String((i%4)*60));});AOS.init({once:true,duration:700,easing:'ease-out-cubic',offset:40});}}catch(e){}})();</script>`;
 
