@@ -17,9 +17,10 @@ The Phase 1 frontend (`src/index.js`) is live and fine. The Phase 2 "70% backend
 ## 2. Architecture (all reusable building blocks)
 
 ```
-Browser ──► Cloudflare Worker "rk-associate"  (one deploy, same origin)
-             ├─ /api/*  → Hono app (src/api/)        ← backend thread
-             └─ /*      → src/index.js page renderers ← frontend thread
+Browser ──► Live site: Next.js 16 app (OpenNext) on Worker "rk-associate"  ← frontend thread
+   │          (source not in this repo yet; src/index.js here is older, undeployed code)
+   └──────► API Worker "rk-associate-api" (this repo, src/worker.js → src/api/)  ← backend thread
+             auth via Bearer token (workers.dev subdomains are cross-site, so cookies are a fallback only)
                      │
                      ├─ Supabase: Postgres + Auth (email/password, reset, email confirm) + RLS
                      ├─ Cloudflare R2 binding: FILES (ticket attachments, certificates)
@@ -67,8 +68,9 @@ Every slice: code + Vitest tests + PR. Steps that touch production or money (liv
 
 ## 5. Ownership / coordination
 
-- `src/index.js` (page HTML/CSS): frontend redesign thread (premium white + Apple red).
-- `src/worker.js`, `src/api/**`, `supabase/**`, `wrangler.toml`, `package.json`, `test/**`: backend thread.
+- Live Next.js site (worker `rk-associate`): frontend redesign thread. **Never deploy this repo under the name `rk-associate`**; it would replace the live site.
+- `src/worker.js`, `src/api/**`, `supabase/**`, `wrangler.toml`, `package.json`, `test/**`: backend thread (worker `rk-associate-api`).
+- Slice 10 (frontend wiring) targets the Next.js app once its source is in git.
 
 ## 6. Risks
 

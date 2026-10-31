@@ -1,5 +1,6 @@
-# RK Associates platform: one Worker serves pages (src/index.js) and the API (/api/*).
-name = "rk-associate"
+# RK Associates backend API. Deliberately NOT named "rk-associate": that name is the live
+# Next.js site, and deploying over it would replace the website.
+name = "rk-associate-api"
 main = "src/worker.js"
 compatibility_date = "2026-10-01"
 compatibility_flags = ["nodejs_compat"]

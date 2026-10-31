@@ -26,9 +26,13 @@ describe('API scaffold', () => {
     expect(res.headers.get('access-control-allow-origin')).toBeNull();
   });
 
-  it('still serves the existing pages', async () => {
-    const res = await fetchApp('/');
-    expect(res.status).toBe(200);
-    expect(res.headers.get('content-type')).toContain('text/html');
+  it('allows the live site origin', async () => {
+    const res = await fetchApp('/api/health', { headers: { Origin: 'https://rk-associate.vliab.workers.dev' } });
+    expect(res.headers.get('access-control-allow-origin')).toBe('https://rk-associate.vliab.workers.dev');
+  });
+
+  it('is API-only (no pages)', async () => {
+    const res = await fetchApp('/login');
+    expect(res.status).toBe(404);
   });
 });
