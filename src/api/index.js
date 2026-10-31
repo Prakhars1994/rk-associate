@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import { HTTPException } from 'hono/http-exception';
+import auth from './routes/auth.js';
 
 const api = new Hono();
 
@@ -19,6 +20,8 @@ api.use('*', (c, next) => {
 api.get('/health', (c) =>
   c.json({ ok: true, service: 'rk-associate-api', env: c.env?.APP_ENV ?? 'unknown' })
 );
+
+api.route('/auth', auth);
 
 api.onError((err, c) => {
   if (err instanceof HTTPException) {
