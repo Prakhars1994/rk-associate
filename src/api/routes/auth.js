@@ -4,9 +4,11 @@ import { validate as validateTarget } from '../lib/validate.js';
 import { setCookie, deleteCookie, getCookie } from 'hono/cookie';
 import { HTTPException } from 'hono/http-exception';
 import { anonClient } from '../lib/supabase.js';
+import { rateLimit } from '../middleware/ratelimit.js';
 import { requireUser, ACCESS_COOKIE, REFRESH_COOKIE } from '../middleware/auth.js';
 
 const auth = new Hono();
+for (const path of ['/register', '/login', '/forgot-password', '/refresh']) auth.use(path, rateLimit('AUTH_LIMITER', path));
 
 const email = z.string().trim().toLowerCase().email().max(255);
 const password = z.string().min(8).max(72);

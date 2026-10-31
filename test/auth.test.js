@@ -92,3 +92,15 @@ describe('other auth endpoints', () => {
     expect(res.headers.getSetCookie().join('\n')).toMatch(/rk_at=;.*Max-Age=0/);
   });
 });
+
+describe('rate limiting', () => {
+  it('returns 429 after 10 login attempts a minute from one IP', async () => {
+    mockSupabase({ 'POST /auth/v1/token': () => [400, { error: 'invalid_grant' }] });
+    const statuses = [];
+    for (let i = 0; i < 12; i++) {
+      const res = await postJson('/api/auth/login', { email: 'x@example.com', password: 'nope' }, { 'CF-Connecting-IP': '203.0.113.9' });
+      statuses.push(res.status);
+    }
+    expect(statuses).toContain(429);
+  });
+});

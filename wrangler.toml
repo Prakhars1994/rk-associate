@@ -24,3 +24,9 @@ bucket_name = "rk-associate-files"
 
 [observability]
 enabled = true
+
+# Cloudflare Rate Limiting binding: brute-force protection for auth endpoints (per IP).
+[[ratelimits]]
+name = "AUTH_LIMITER"
+namespace_id = "1001"
+simple = { limit = 10, period = 60 }
