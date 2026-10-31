@@ -30,5 +30,5 @@ export function mockSupabase(routes) {
   return calls;
 }
 
-export const fakeUser = { id: '11111111-1111-1111-1111-111111111111', email: 'asha@example.com', aud: 'authenticated', role: 'authenticated' };
+export const fakeUser = { id: '7d1e4c3a-2b5f-4a6e-9c8d-0f1a2b3c4d5e', email: 'asha@example.com', aud: 'authenticated', role: 'authenticated' };
 export const fakeSession = { access_token: 'at-123', refresh_token: 'rt-456', expires_in: 3600, expires_at: 9999999999, token_type: 'bearer', user: fakeUser };
