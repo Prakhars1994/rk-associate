@@ -1,0 +1,1 @@
+import type {MetadataRoute} from "next";const b="https://rk-associate.vliab.workers.dev";export default function sitemap():MetadataRoute.Sitemap{return ["","/about","/services","/courses","/resources","/clients","/contact"].map(x=>({url:b+x,lastModified:new Date(),changeFrequency:x===""?"weekly":"monthly",priority:x===""?1:0.8}))}
