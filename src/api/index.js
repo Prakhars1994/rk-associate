@@ -8,6 +8,7 @@ import { payments, razorpayWebhook } from './routes/payments.js';
 import tickets from './routes/tickets.js';
 import admin from './routes/admin.js';
 import files from './routes/files.js';
+import { certificatesPublic, certificatesMine } from './routes/certificates.js';
 
 const api = new Hono();
 
@@ -29,6 +30,8 @@ api.get('/health', (c) =>
 api.route('/auth', auth);
 api.route('/', catalogue);
 api.route('/me', learner);
+api.route('/me', certificatesMine);
+api.route('/certificates', certificatesPublic);
 api.route('/payments', payments);
 api.route('/tickets', tickets);
 api.route('/admin', admin);
