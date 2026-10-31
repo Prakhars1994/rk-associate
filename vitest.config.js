@@ -14,6 +14,8 @@ export default defineConfig({
           RAZORPAY_KEY_ID: 'rzp_test_abc',
           RAZORPAY_KEY_SECRET: 'rzp_secret',
           RAZORPAY_WEBHOOK_SECRET: 'whsec',
+          SENDGRID_API_KEY: 'SG.test',
+          SENDGRID_FROM_EMAIL: 'noreply@rkassociate.com',
         },
       },
     }),

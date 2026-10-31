@@ -4,18 +4,25 @@ import { HTTPException } from 'hono/http-exception';
 import { serviceClient } from '../lib/supabase.js';
 import { validate, unwrap } from '../lib/validate.js';
 import { requireUser } from '../middleware/auth.js';
+import { queueEmail, templates } from '../lib/email.js';
 import { createOrder, verifyPaymentSignature, verifyWebhookSignature } from '../lib/razorpay.js';
 
 /**
  * Marks a payment paid and activates its enrolment. Idempotent: safe to call from both
  * the checkout callback and the webhook, in either order.
  */
-export async function markPaid(svc, orderId, { paymentId, method, raw } = {}) {
-  const payment = unwrap(await svc.from('payments').select('id, enrollment_id, status').eq('razorpay_order_id', orderId).maybeSingle());
+export async function markPaid(svc, orderId, { paymentId, method, raw } = {}, c = null) {
+  const payment = unwrap(await svc.from('payments').select('id, enrollment_id, status, amount_paise, user:profiles(email, full_name), enrollment:enrollments(course:courses(title))').eq('razorpay_order_id', orderId).maybeSingle());
   if (!payment) return null;
-  if (payment.status !== 'paid') {
+  payment.newlyPaid = payment.status !== 'paid';
+  if (payment.newlyPaid) {
     unwrap(await svc.from('payments').update({ status: 'paid', razorpay_payment_id: paymentId ?? null, method: method ?? null, raw: raw ?? null }).eq('id', payment.id));
     unwrap(await svc.from('enrollments').update({ payment_status: 'paid', status: 'active' }).eq('id', payment.enrollment_id).neq('status', 'completed'));
+    if (c) {
+      queueEmail(c, payment.user?.email, templates.paymentReceipt({
+        name: payment.user?.full_name, course: payment.enrollment?.course?.title || 'your course', amount_paise: payment.amount_paise, order_id: orderId,
+      }));
+    }
   }
   return payment;
 }
@@ -72,7 +79,7 @@ payments.post('/verify', requireUser, validate('json', z.object({
   const owned = unwrap(await svc.from('payments').select('id, user_id').eq('razorpay_order_id', body.razorpay_order_id).maybeSingle());
   if (!owned || owned.user_id !== c.get('user').id) throw new HTTPException(404, { message: 'payment_not_found' });
 
-  const payment = await markPaid(svc, body.razorpay_order_id, { paymentId: body.razorpay_payment_id });
+  const payment = await markPaid(svc, body.razorpay_order_id, { paymentId: body.razorpay_payment_id }, c);
   return c.json({ ok: true, enrollment_id: payment.enrollment_id });
 });
 
@@ -89,7 +96,7 @@ razorpayWebhook.post('/', async (c) => {
   const svc = serviceClient(c.env);
 
   if ((event.event === 'payment.captured' || event.event === 'order.paid') && entity?.order_id) {
-    await markPaid(svc, entity.order_id, { paymentId: entity.id, method: entity.method, raw: event });
+    await markPaid(svc, entity.order_id, { paymentId: entity.id, method: entity.method, raw: event }, c);
   } else if (event.event === 'payment.failed' && entity?.order_id) {
     unwrap(await svc.from('payments').update({ status: 'failed', razorpay_payment_id: entity.id, raw: event }).eq('razorpay_order_id', entity.order_id).neq('status', 'paid'));
   }

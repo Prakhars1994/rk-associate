@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { HTTPException } from 'hono/http-exception';
 import { validate, unwrap } from '../lib/validate.js';
 import { requireUser, requireRole } from '../middleware/auth.js';
+import { serviceClient } from '../lib/supabase.js';
+import { queueEmail, templates } from '../lib/email.js';
 
 // All queries run as the signed-in user, so RLS decides what they can see/do:
 // clients see their own tickets and non-internal comments; admins/trainers see all.
@@ -23,6 +25,7 @@ tickets.post('/', validate('json', z.object({
 })), async (c) => {
   const input = c.req.valid('json');
   const ticket = unwrap(await c.get('db').from('tickets').insert({ ...input, client_id: c.get('user').id }).select('id, ticket_number, status').single());
+  queueEmail(c, c.get('user').email, templates.ticketCreated({ name: c.get('profile')?.full_name, ticket_number: ticket.ticket_number, subject: input.subject }));
   return c.json({ ticket }, 201);
 });
 
@@ -58,6 +61,11 @@ tickets.post('/:id/comments', idParam, validate('json', z.object({
   if (is_internal && !isStaff) throw new HTTPException(403, { message: 'forbidden' });
   const { data, error } = await c.get('db').from('ticket_comments').insert({ ticket_id: id, author_id: c.get('user').id, body, is_internal }).select('id, created_at').single();
   if (error) throw new HTTPException(404, { message: 'not_found' }); // RLS: not your ticket
+  if (isStaff && !is_internal) {
+    // Tell the client their ticket has a reply.
+    const t = unwrap(await serviceClient(c.env).from('tickets').select('ticket_number, subject, client:profiles!tickets_client_id_fkey(email, full_name)').eq('id', id).maybeSingle());
+    if (t) queueEmail(c, t.client?.email, templates.ticketReply({ name: t.client?.full_name, ticket_number: t.ticket_number, subject: t.subject }));
+  }
   return c.json({ comment: data }, 201);
 });
 
