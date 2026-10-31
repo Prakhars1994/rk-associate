@@ -16,13 +16,15 @@ export function mockSupabase(routes) {
   vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
     const req = new Request(input, init);
     const url = new URL(req.url);
-    if (url.origin !== 'https://sb.test') return real(input, init);
-    const key = `${req.method} ${url.pathname}`;
+    if (url.origin !== 'https://sb.test' && url.origin !== 'https://api.razorpay.com') return real(input, init);
+    const prefix = url.origin === 'https://api.razorpay.com' ? 'RZP ' : '';
+    const key = `${prefix}${req.method} ${url.pathname}`;
     const body = req.method === 'GET' ? null : await req.clone().json().catch(() => null);
     calls.push({ key, url, body, headers: req.headers });
     const match = Object.keys(routes).find((k) => key.startsWith(k));
     if (!match) return new Response(JSON.stringify({ message: `unmocked ${key}` }), { status: 500 });
     const [status, json] = await routes[match]({ url, body, headers: req.headers });
+    if (status === 204) return new Response(null, { status });
     return new Response(JSON.stringify(json), { status, headers: { 'Content-Type': 'application/json' } });
   });
   return calls;

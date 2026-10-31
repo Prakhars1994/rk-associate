@@ -4,6 +4,7 @@ import { secureHeaders } from 'hono/secure-headers';
 import { HTTPException } from 'hono/http-exception';
 import auth from './routes/auth.js';
 import { catalogue, learner } from './routes/courses.js';
+import { payments, razorpayWebhook } from './routes/payments.js';
 
 const api = new Hono();
 
@@ -25,6 +26,8 @@ api.get('/health', (c) =>
 api.route('/auth', auth);
 api.route('/', catalogue);
 api.route('/me', learner);
+api.route('/payments', payments);
+api.route('/webhooks/razorpay', razorpayWebhook);
 
 api.onError((err, c) => {
   if (err instanceof HTTPException) {
