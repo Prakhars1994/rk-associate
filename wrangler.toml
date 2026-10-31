@@ -17,10 +17,10 @@ ALLOWED_ORIGINS = "https://rk-associate.vliab.workers.dev"
 # RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET,
 # SENDGRID_API_KEY, SENDGRID_FROM_EMAIL
 
-# R2 bucket for ticket attachments and certificates (enabled in slice 6).
-# [[r2_buckets]]
-# binding = "FILES"
-# bucket_name = "rk-associate-files"
+# R2 bucket for ticket attachments and certificates. Create once: wrangler r2 bucket create rk-associate-files
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "rk-associate-files"
 
 [observability]
 enabled = true

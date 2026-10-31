@@ -7,6 +7,7 @@ import { catalogue, learner } from './routes/courses.js';
 import { payments, razorpayWebhook } from './routes/payments.js';
 import tickets from './routes/tickets.js';
 import admin from './routes/admin.js';
+import files from './routes/files.js';
 
 const api = new Hono();
 
@@ -31,6 +32,7 @@ api.route('/me', learner);
 api.route('/payments', payments);
 api.route('/tickets', tickets);
 api.route('/admin', admin);
+api.route('/files', files);
 api.route('/webhooks/razorpay', razorpayWebhook);
 
 api.onError((err, c) => {
