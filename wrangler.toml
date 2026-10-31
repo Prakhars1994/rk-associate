@@ -1,11 +1,25 @@
+# RK Associates platform: one Worker serves pages (src/index.js) and the API (/api/*).
 name = "rk-associate"
-type = "javascript"
+main = "src/worker.js"
+compatibility_date = "2026-10-01"
+compatibility_flags = ["nodejs_compat"]
 account_id = "ac58b62e8f62115bb2a73be4a5202360"
 workers_dev = true
-route = "*rk-associate.vliab.workers.dev/*"
-zone_id = ""
-main = "src/index.js"
 
-[build]
-command = ""
-cwd = ""
+[vars]
+APP_ENV = "production"
+# Comma-separated list of origins allowed to call the API cross-origin (same-origin needs nothing).
+ALLOWED_ORIGINS = "https://rk-associate.vliab.workers.dev"
+
+# Secrets (set with `wrangler secret put NAME`, never commit):
+# SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY,
+# RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET,
+# SENDGRID_API_KEY, SENDGRID_FROM_EMAIL
+
+# R2 bucket for ticket attachments and certificates (enabled in slice 6).
+# [[r2_buckets]]
+# binding = "FILES"
+# bucket_name = "rk-associate-files"
+
+[observability]
+enabled = true

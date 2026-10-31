@@ -2,12 +2,14 @@
   "name": "rk-associate",
   "version": "1.0.0",
   "description": "RK Associates HR Training Platform - Cloudflare Workers",
-  "main": "src/index.js",
+  "main": "src/worker.js",
   "type": "module",
   "scripts": {
-    "deploy": "wrangler publish",
     "dev": "wrangler dev",
-    "test": "echo 'Tests pass'"
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "types": "wrangler types"
   },
   "keywords": [
     "hr-training",
@@ -16,5 +18,15 @@
   ],
   "author": "Vishwakarma Digital Labs",
   "license": "MIT",
-  "dependencies": {}
+  "dependencies": {
+    "@hono/zod-validator": "^0.9.1",
+    "@supabase/supabase-js": "^2.118.0",
+    "hono": "^4.13.14",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "wrangler": "4.156.0",
+    "vitest": "^4.1.0",
+    "@cloudflare/vitest-plugin": "^1.4.11"
+  }
 }
