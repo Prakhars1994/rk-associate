@@ -3,6 +3,7 @@ import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import { HTTPException } from 'hono/http-exception';
 import auth from './routes/auth.js';
+import { catalogue, learner } from './routes/courses.js';
 
 const api = new Hono();
 
@@ -22,6 +23,8 @@ api.get('/health', (c) =>
 );
 
 api.route('/auth', auth);
+api.route('/', catalogue);
+api.route('/me', learner);
 
 api.onError((err, c) => {
   if (err instanceof HTTPException) {

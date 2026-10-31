@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { zValidator } from '@hono/zod-validator';
+import { validate as validateTarget } from '../lib/validate.js';
 import { setCookie, deleteCookie, getCookie } from 'hono/cookie';
 import { HTTPException } from 'hono/http-exception';
 import { anonClient } from '../lib/supabase.js';
@@ -20,12 +20,7 @@ const registerSchema = z.object({
 });
 const loginSchema = z.object({ email, password: z.string().min(1).max(72) });
 
-const validate = (schema) =>
-  zValidator('json', schema, (result, c) => {
-    if (!result.success) {
-      return c.json({ error: 'invalid_input', issues: result.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })) }, 400);
-    }
-  });
+const validate = (schema) => validateTarget('json', schema);
 
 function setSessionCookies(c, session) {
   const base = { httpOnly: true, secure: true, sameSite: 'Lax', path: '/' };
