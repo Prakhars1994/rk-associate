@@ -67,8 +67,14 @@ create table public.course_modules (
   course_id uuid not null references public.courses(id) on delete cascade,
   position integer not null,
   title text not null,
-  content_url text,
   unique (course_id, position)
+);
+
+-- Lesson content (video/doc links) is kept apart from the public module outline so it
+-- can be restricted to paid learners.
+create table public.course_module_content (
+  module_id uuid primary key references public.course_modules(id) on delete cascade,
+  content_url text not null
 );
 
 create table public.enrollments (

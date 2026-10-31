@@ -5,6 +5,7 @@
 alter table public.profiles        enable row level security;
 alter table public.courses         enable row level security;
 alter table public.course_modules  enable row level security;
+alter table public.course_module_content enable row level security;
 alter table public.enrollments     enable row level security;
 alter table public.module_progress enable row level security;
 alter table public.free_resources  enable row level security;
@@ -29,7 +30,16 @@ grant update (full_name, phone) on public.profiles to authenticated;
 -- public catalogue
 create policy courses_read on public.courses for select to anon, authenticated
   using (status = 'active' or (select public.is_admin()));
-create policy modules_read on public.course_modules for select to anon, authenticated using (true);
+-- Module outline (titles) is public only for active courses.
+create policy modules_read on public.course_modules for select to anon, authenticated
+  using ((select public.is_admin()) or exists (
+    select 1 from public.courses co where co.id = course_id and co.status = 'active'));
+-- Lesson content only for a paid enrolment in that module's course, or staff.
+create policy module_content_read on public.course_module_content for select to authenticated
+  using ((select public.is_admin()) or exists (
+    select 1 from public.course_modules m
+    join public.enrollments e on e.course_id = m.course_id
+    where m.id = module_id and e.user_id = (select auth.uid()) and e.payment_status = 'paid'));
 create policy resources_read on public.free_resources for select to anon, authenticated using (true);
 
 -- enrolments (created by the Worker after a payment order; read-only for users)
@@ -40,8 +50,10 @@ create policy progress_select on public.module_progress for select to authentica
   using (exists (select 1 from public.enrollments e where e.id = enrollment_id
                  and (e.user_id = (select auth.uid()) or (select public.is_admin()))));
 create policy progress_insert on public.module_progress for insert to authenticated
-  with check (exists (select 1 from public.enrollments e where e.id = enrollment_id
-                      and e.user_id = (select auth.uid()) and e.payment_status = 'paid'));
+  with check (exists (select 1 from public.enrollments e
+                      join public.course_modules m on m.course_id = e.course_id
+                      where e.id = enrollment_id and m.id = module_id
+                        and e.user_id = (select auth.uid()) and e.payment_status = 'paid'));
 
 -- payments: read own
 create policy payments_select on public.payments for select to authenticated
@@ -69,7 +81,9 @@ create policy files_select on public.files for select to authenticated
   using (owner_id = (select auth.uid()) or (select public.is_admin()) or exists (
     select 1 from public.tickets t where t.id = ticket_id and t.client_id = (select auth.uid())));
 create policy files_insert on public.files for insert to authenticated
-  with check (owner_id = (select auth.uid()));
+  with check (owner_id = (select auth.uid()) and (
+    ticket_id is null or (select public.is_admin()) or exists (
+      select 1 from public.tickets t where t.id = ticket_id and t.client_id = (select auth.uid()))));
 
 -- certificates: owner and admins; public verification goes through the Worker
 create policy certificates_select on public.certificates for select to authenticated
