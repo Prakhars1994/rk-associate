@@ -435,3 +435,4 @@ html body .card,html body .card>div,html body .supportChroma,html body .chromaCa
 html body header{background:#fff!important;border-bottom-color:var(--rk-line)!important}
 html body .siteHeader{background:#fff!important}
 html body .stat{border-color:#ffffff33!important}
+.studentAuth .formPanel{max-width:480px;margin:0 auto}.studentAuth h1{font-size:clamp(1.8rem,4vw,2.4rem);margin:.3em 0 .6em}.studentAuth .payTabs{margin-bottom:12px}.authLinks{margin-top:10px}.myCourses .sectionHead h1{font-size:clamp(1.8rem,4vw,2.4rem)}.progressBar{height:8px;border-radius:99px;background:#0000000f;overflow:hidden;margin:10px 0 4px}.progressBar span{display:block;height:100%;background:var(--rk-grad,#D70015)}
