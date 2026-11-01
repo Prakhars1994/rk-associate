@@ -1,8 +1,9 @@
 // Server-only helpers for storing website enquiries in Supabase and notifying the office by email.
 // Required env: SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY (insert-only via RLS) or SUPABASE_SERVICE_ROLE_KEY.
 // Optional: SENDGRID_API_KEY, ENQUIRY_NOTIFY_EMAIL, ENQUIRY_FROM_EMAIL.
+import {emailOffice} from "./email";
 
-export type Enquiry = {kind:"business"|"training";name:string;mobile:string;email?:string;company?:string;service?:string;course?:string;experience?:string;employee_count?:string;preferred_batch?:string;message?:string;source_page?:string;user_agent?:string};
+export type Enquiry ={kind:"business"|"training";name:string;mobile:string;email?:string;company?:string;service?:string;course?:string;experience?:string;employee_count?:string;preferred_batch?:string;message?:string;source_page?:string;user_agent?:string};
 
 const limits:Record<string,number>={name:120,mobile:20,email:200,company:200,service:120,course:120,experience:40,employee_count:20,preferred_batch:120,message:4000};
 
@@ -41,20 +42,8 @@ export async function saveEnquiry(e:Enquiry):Promise<string>{
   return id;
 }
 
-const esc=(s:string)=>s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]!));
-
 // Best effort: a missing key or SendGrid error never fails the enquiry, which is already saved.
 export async function notifyOffice(e:Enquiry,id:string):Promise<void>{
-  const key=process.env.SENDGRID_API_KEY,to=process.env.ENQUIRY_NOTIFY_EMAIL,from=process.env.ENQUIRY_FROM_EMAIL;
-  if(!key||!to||!from)return;
-  const rows=Object.entries(e).filter(([k,v])=>v&&k!=="user_agent").map(([k,v])=>`<tr><td style="padding:4px 12px 4px 0;color:#666">${esc(k.replace(/_/g," "))}</td><td style="padding:4px 0">${esc(String(v))}</td></tr>`).join("");
-  const subject=`New ${e.kind} enquiry: ${e.name}${e.service||e.course?` (${e.service||e.course})`:""}`;
-  const res=await fetch("https://api.sendgrid.com/v3/mail/send",{method:"POST",headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},body:JSON.stringify({
-    personalizations:[{to:to.split(",").map(x=>({email:x.trim()}))}],
-    from:{email:from,name:"RK Associate Website"},
-    ...(e.email?{reply_to:{email:e.email,name:e.name}}:{}),
-    subject,
-    content:[{type:"text/html",value:`<h2 style="font-family:sans-serif">${esc(subject)}</h2><table style="font-family:sans-serif;font-size:14px">${rows}</table><p style="font-family:sans-serif;color:#999;font-size:12px">Enquiry id ${id}</p>`}]
-  })});
-  if(!res.ok)console.error("SendGrid notify failed",res.status,await res.text());
+  const {user_agent:_ua,...fields}=e;
+  await emailOffice(`New ${e.kind} enquiry: ${e.name}${e.service||e.course?` (${e.service||e.course})`:""}`,fields,{replyTo:e.email?{email:e.email,name:e.name}:undefined,footer:`Enquiry id ${id}`});
 }

@@ -299,3 +299,5 @@ footer a{color:inherit}.float a{text-decoration:none}
   .float.mobileComfort>a{font-size:12px!important;padding:7px 5px!important;min-height:38px!important}
   .float.mobileComfort .contactIcon{width:18px!important;height:18px!important;min-width:18px!important;font-size:11px!important;line-height:18px!important}
 }
+
+.payNote{display:block;font-size:.85rem;margin-top:6px}
