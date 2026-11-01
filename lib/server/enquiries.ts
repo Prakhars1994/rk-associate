@@ -1,5 +1,6 @@
 // Server-only helpers for storing website enquiries in Supabase and notifying the office by email.
-// Required env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY. Optional: SENDGRID_API_KEY, ENQUIRY_NOTIFY_EMAIL, ENQUIRY_FROM_EMAIL.
+// Required env: SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY (insert-only via RLS) or SUPABASE_SERVICE_ROLE_KEY.
+// Optional: SENDGRID_API_KEY, ENQUIRY_NOTIFY_EMAIL, ENQUIRY_FROM_EMAIL.
 
 export type Enquiry = {kind:"business"|"training";name:string;mobile:string;email?:string;company?:string;service?:string;course?:string;experience?:string;employee_count?:string;preferred_batch?:string;message?:string;source_page?:string;user_agent?:string};
 
@@ -29,12 +30,15 @@ export function parseEnquiry(body:unknown):{ok:true;enquiry:Enquiry}|{ok:false;e
 }
 
 export async function saveEnquiry(e:Enquiry):Promise<string>{
-  const url=process.env.SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url=process.env.SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY||process.env.SUPABASE_PUBLISHABLE_KEY;
   if(!url||!key)throw new Error("Supabase is not configured");
-  const res=await fetch(`${url}/rest/v1/enquiries`,{method:"POST",headers:{"Content-Type":"application/json",apikey:key,Authorization:`Bearer ${key}`,Prefer:"return=representation"},body:JSON.stringify(e)});
+  // The publishable key cannot read rows back, so the id is generated here and the insert returns nothing.
+  const id=crypto.randomUUID();
+  const headers:Record<string,string>={"Content-Type":"application/json",apikey:key,Prefer:"return=minimal"};
+  if(key.startsWith("eyJ"))headers.Authorization=`Bearer ${key}`; // legacy JWT keys also need the bearer header
+  const res=await fetch(`${url}/rest/v1/enquiries`,{method:"POST",headers,body:JSON.stringify({...e,id})});
   if(!res.ok)throw new Error(`Supabase insert failed: ${res.status} ${await res.text()}`);
-  const [row]=await res.json() as {id:string}[];
-  return row.id;
+  return id;
 }
 
 const esc=(s:string)=>s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]!));

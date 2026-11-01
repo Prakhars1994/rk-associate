@@ -1,7 +1,7 @@
-# Copy to .dev.vars for local `wrangler dev` / `opennextjs-cloudflare preview`.
-# In production set these with `npx wrangler secret put <NAME>` (never commit real values).
-SUPABASE_URL=https://uhimwozohogjgaqcyink.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=
+# Public config (SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, ENQUIRY_NOTIFY_EMAIL) lives in wrangler.jsonc "vars".
+# Secrets go in .dev.vars locally and `npx wrangler secret put <NAME>` in production (never commit real values).
+# Optional - enables the email alert to the office:
 SENDGRID_API_KEY=
-ENQUIRY_NOTIFY_EMAIL=totalhrsolution2015@gmail.com
 ENQUIRY_FROM_EMAIL=
+# Optional - only if the server should write with full access instead of the insert-only publishable key:
+SUPABASE_SERVICE_ROLE_KEY=
