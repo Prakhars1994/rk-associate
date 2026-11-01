@@ -1,0 +1,7 @@
+# Copy to .dev.vars for local `wrangler dev` / `opennextjs-cloudflare preview`.
+# In production set these with `npx wrangler secret put <NAME>` (never commit real values).
+SUPABASE_URL=https://uhimwozohogjgaqcyink.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=
+SENDGRID_API_KEY=
+ENQUIRY_NOTIFY_EMAIL=totalhrsolution2015@gmail.com
+ENQUIRY_FROM_EMAIL=
