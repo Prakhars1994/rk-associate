@@ -301,3 +301,4 @@ footer a{color:inherit}.float a{text-decoration:none}
 }
 
 .payNote{display:block;font-size:.85rem;margin-top:6px}
+.payAccount{margin-top:10px;width:100%}.payTabs{display:flex;gap:6px}.payTabs button{flex:1;padding:8px;border:1px solid currentColor;border-radius:999px;background:transparent;font:inherit;cursor:pointer;opacity:.7}.payTabs button.active{opacity:1;font-weight:700}.payCancel{background:none;border:0;font:inherit;text-decoration:underline;cursor:pointer;opacity:.7}
