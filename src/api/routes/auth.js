@@ -8,7 +8,7 @@ import { rateLimit } from '../middleware/ratelimit.js';
 import { requireUser, ACCESS_COOKIE, REFRESH_COOKIE } from '../middleware/auth.js';
 
 const auth = new Hono();
-for (const path of ['/register', '/login', '/forgot-password', '/refresh']) auth.use(path, rateLimit('AUTH_LIMITER', path));
+for (const path of ['/register', '/login', '/forgot-password', '/reset-password', '/refresh']) auth.use(path, rateLimit('AUTH_LIMITER', path));
 
 const email = z.string().trim().toLowerCase().email().max(255);
 const password = z.string().min(8).max(72);
@@ -23,6 +23,9 @@ const registerSchema = z.object({
 const loginSchema = z.object({ email, password: z.string().min(1).max(72) });
 
 const validate = (schema) => validateTarget('json', schema);
+
+// Email links (confirm, reset) land on the website, which hosts /login. Falls back to this API's origin.
+const siteUrl = (c) => c.env.SITE_URL || new URL(c.req.url).origin;
 
 function setSessionCookies(c, session) {
   const base = { httpOnly: true, secure: true, sameSite: 'Lax', path: '/' };
@@ -40,11 +43,10 @@ function sessionBody(session, user) {
 
 auth.post('/register', validate(registerSchema), async (c) => {
   const { email, password, full_name, phone, role } = c.req.valid('json');
-  const origin = new URL(c.req.url).origin;
   const { data, error } = await anonClient(c.env).auth.signUp({
     email,
     password,
-    options: { data: { full_name, phone, role }, emailRedirectTo: `${origin}/login?confirmed=1` },
+    options: { data: { full_name, phone, role }, emailRedirectTo: `${siteUrl(c)}/login?confirmed=1` },
   });
   if (error) {
     const status = error.status === 422 || error.status === 400 ? 400 : 502;
@@ -86,9 +88,24 @@ auth.post('/logout', async (c) => {
 
 auth.post('/forgot-password', validate(z.object({ email })), async (c) => {
   const { email } = c.req.valid('json');
-  const origin = new URL(c.req.url).origin;
-  await anonClient(c.env).auth.resetPasswordForEmail(email, { redirectTo: `${origin}/login?reset=1` });
+  await anonClient(c.env).auth.resetPasswordForEmail(email, { redirectTo: `${siteUrl(c)}/login?reset=1` });
   // Always 200 so the endpoint can't be used to discover accounts.
+  return c.json({ ok: true });
+});
+
+/** Sets a new password using the recovery access token from the reset email link (Supabase puts it in the URL hash). */
+auth.post('/reset-password', validate(z.object({ access_token: z.string().min(20).max(4096), password })), async (c) => {
+  const { access_token, password: newPassword } = c.req.valid('json');
+  const res = await fetch(`${c.env.SUPABASE_URL}/auth/v1/user`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', apikey: c.env.SUPABASE_ANON_KEY, Authorization: `Bearer ${access_token}` },
+    body: JSON.stringify({ password: newPassword }),
+  });
+  if (res.status === 401 || res.status === 403) throw new HTTPException(401, { message: 'reset_link_expired' });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    return c.json({ error: body.error_code || body.code || 'reset_failed', message: body.msg || body.message }, 400);
+  }
   return c.json({ ok: true });
 });
 

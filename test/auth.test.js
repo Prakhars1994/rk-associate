@@ -87,6 +87,29 @@ describe('other auth endpoints', () => {
     expect(res.status).toBe(200);
   });
 
+  it('email links point at the website /login page', async () => {
+    const calls = mockSupabase({ 'POST /auth/v1/signup': () => [200, { ...fakeUser, identities: [{}] }], 'POST /auth/v1/recover': () => [200, {}] });
+    await postJson('/api/auth/register', { email: 'asha@example.com', password: 'longenough', full_name: 'Asha Rao' });
+    await postJson('/api/auth/forgot-password', { email: 'asha@example.com' });
+    expect(calls[0].url.searchParams.get('redirect_to')).toBe('https://rk-associate.vliab.workers.dev/login?confirmed=1');
+    expect(calls[1].url.searchParams.get('redirect_to')).toBe('https://rk-associate.vliab.workers.dev/login?reset=1');
+  });
+
+  it('reset-password updates the password with the recovery token', async () => {
+    const calls = mockSupabase({ 'PUT /auth/v1/user': () => [200, fakeUser] });
+    const res = await postJson('/api/auth/reset-password', { access_token: 'recovery-token-1234567890', password: 'brandnewpass' });
+    expect(res.status).toBe(200);
+    expect(calls[0].body).toEqual({ password: 'brandnewpass' });
+    expect(calls[0].headers.get('Authorization')).toBe('Bearer recovery-token-1234567890');
+  });
+
+  it('reset-password reports an expired link', async () => {
+    mockSupabase({ 'PUT /auth/v1/user': () => [401, { msg: 'expired' }] });
+    const res = await postJson('/api/auth/reset-password', { access_token: 'recovery-token-1234567890', password: 'brandnewpass' });
+    expect(res.status).toBe(401);
+    expect((await res.json()).error).toBe('reset_link_expired');
+  });
+
   it('logout clears cookies', async () => {
     const res = await postJson('/api/auth/logout', {});
     expect(res.headers.getSetCookie().join('\n')).toMatch(/rk_at=;.*Max-Age=0/);
