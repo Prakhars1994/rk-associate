@@ -41,9 +41,21 @@ export async function signIn(mode:"login"|"register",f:{email:string;password:st
 
 export async function signOut(){const s=readSession();saveSession(null);await apiCall("/auth/logout",{body:{},token:s?.access_token})}
 
-// Admin login: password sign-in, then the account must have the admin role or the session is discarded at once.
+// Supabase Auth is called directly for two-factor (TOTP) sign-in. Both values are public by design.
+const SUPABASE_URL=process.env.NEXT_PUBLIC_SUPABASE_URL||"https://uhimwozohogjgaqcyink.supabase.co";
+const SUPABASE_KEY=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||"sb_publishable_KkpKJ32tFFA2Y57IXV-iBA_FDBv4nyH";
+async function supabaseAuth(path:string,token:string,method="GET",body?:unknown){
+  const res=await fetch(`${SUPABASE_URL}/auth/v1${path}`,{method,headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${token}`,...(body!==undefined?{"Content-Type":"application/json"}:{})},body:body===undefined?undefined:JSON.stringify(body)}).catch(()=>null);
+  if(!res)return {status:0,data:{} as Record<string,any>};
+  return {status:res.status,data:await res.json().catch(()=>({})) as Record<string,any>};
+}
+
+// A password-verified admin who still has to pass the authenticator-app step.
+export type AdminPending={access_token:string;email:string;name?:string;factorId?:string};
+
+// Step 1: password, then the account must be an active admin or the session is discarded at once.
 // Same message for wrong password and non-admin accounts, so the page doesn't reveal which emails are staff.
-export async function adminSignIn(email:string,password:string):Promise<{session?:Session;message?:string}>{
+export async function adminPassword(email:string,password:string):Promise<{pending?:AdminPending;message?:string}>{
   const denied="Email or password is incorrect, or this account does not have admin access.";
   const {status,data}=await apiCall("/auth/login",{body:{email:email.trim().toLowerCase(),password}});
   if(status===429)return {message:explain("too_many_requests")};
@@ -54,7 +66,27 @@ export async function adminSignIn(email:string,password:string):Promise<{session
     await apiCall("/auth/logout",{body:{},token:data.access_token});
     return {message:denied};
   }
-  const session:Session={access_token:data.access_token,expires_at:data.expires_at,email:data.user?.email||email,name:me.data.profile?.full_name};
+  const user=await supabaseAuth("/user",data.access_token);
+  const factor=(user.data.factors||[]).find((f:any)=>f.factor_type==="totp"&&f.status==="verified");
+  return {pending:{access_token:data.access_token,email:data.user?.email||email,name:me.data.profile?.full_name,factorId:factor?.id}};
+}
+
+// First-time setup: creates a TOTP factor and returns its QR code (an SVG data URI) and the manual-entry secret.
+export async function adminEnroll(p:AdminPending):Promise<{factorId?:string;qr?:string;secret?:string;message?:string}>{
+  const user=await supabaseAuth("/user",p.access_token);
+  for(const f of user.data.factors||[])if(f.status==="unverified")await supabaseAuth(`/factors/${f.id}`,p.access_token,"DELETE");
+  const {status,data}=await supabaseAuth("/factors",p.access_token,"POST",{factor_type:"totp",friendly_name:"RK Associate admin",issuer:"RK Associate"});
+  if(status!==200||!data.id)return {message:data.msg||data.message||"Could not start two-factor setup. Please try again."};
+  return {factorId:data.id,qr:data.totp?.qr_code,secret:data.totp?.secret};
+}
+
+// Step 2: the 6-digit code. On success Supabase issues an upgraded (aal2) token, which becomes the admin session.
+export async function adminVerify(p:AdminPending,factorId:string,code:string):Promise<{session?:Session;message?:string}>{
+  const ch=await supabaseAuth(`/factors/${factorId}/challenge`,p.access_token,"POST",{});
+  if(ch.status!==200||!ch.data.id)return {message:"Could not check the code. Please log in again."};
+  const v=await supabaseAuth(`/factors/${factorId}/verify`,p.access_token,"POST",{challenge_id:ch.data.id,code:code.replace(/\s/g,"")});
+  if(v.status!==200||!v.data.access_token)return {message:"That code didn't match. Check your authenticator app and try again."};
+  const session:Session={access_token:v.data.access_token,expires_at:v.data.expires_at||Math.floor(Date.now()/1000)+(v.data.expires_in||3600),email:p.email,name:p.name};
   saveAdminSession(session);
   return {session};
 }
