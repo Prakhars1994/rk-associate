@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
+import { env } from 'cloudflare:workers';
 import { fetchApp, postJson, mockSupabase, fakeUser, fakeSession } from './helpers.js';
 
 afterEach(() => vi.restoreAllMocks());
@@ -24,6 +25,35 @@ describe('POST /api/auth/register', () => {
     expect(res.status).toBe(201);
     expect(await res.json()).toMatchObject({ needs_confirmation: true });
     expect(calls[0].body).toMatchObject({ email: 'asha@example.com', data: { full_name: 'Asha Rao', role: 'client' } });
+  });
+
+  it('creates a pre-confirmed user and signs them in when AUTO_CONFIRM_SIGNUPS is on', async () => {
+    env.AUTO_CONFIRM_SIGNUPS = 'true';
+    try {
+      const calls = mockSupabase({
+        'POST /auth/v1/admin/users': () => [200, { ...fakeUser, email_confirmed_at: '2026-11-02T00:00:00Z' }],
+        'POST /auth/v1/token': () => [200, fakeSession],
+      });
+      const res = await postJson('/api/auth/register', { email: 'asha@example.com', password: 'longenough', full_name: 'Asha Rao' });
+      expect(res.status).toBe(201);
+      expect(await res.json()).toMatchObject({ needs_confirmation: false, access_token: 'at-123' });
+      expect(calls[0].body).toMatchObject({ email: 'asha@example.com', email_confirm: true, user_metadata: { full_name: 'Asha Rao' } });
+      expect(calls.some((x) => x.key === 'POST /auth/v1/signup')).toBe(false);
+    } finally {
+      env.AUTO_CONFIRM_SIGNUPS = 'false';
+    }
+  });
+
+  it('reports an existing account when AUTO_CONFIRM_SIGNUPS is on', async () => {
+    env.AUTO_CONFIRM_SIGNUPS = 'true';
+    try {
+      mockSupabase({ 'POST /auth/v1/admin/users': () => [422, { code: 'email_exists', msg: 'exists' }] });
+      const res = await postJson('/api/auth/register', { email: 'asha@example.com', password: 'longenough', full_name: 'Asha Rao' });
+      expect(res.status).toBe(400);
+      expect((await res.json()).error).toBe('user_already_exists');
+    } finally {
+      env.AUTO_CONFIRM_SIGNUPS = 'false';
+    }
   });
 });
 
@@ -91,8 +121,9 @@ describe('other auth endpoints', () => {
     const calls = mockSupabase({ 'POST /auth/v1/signup': () => [200, { ...fakeUser, identities: [{}] }], 'POST /auth/v1/recover': () => [200, {}] });
     await postJson('/api/auth/register', { email: 'asha@example.com', password: 'longenough', full_name: 'Asha Rao' });
     await postJson('/api/auth/forgot-password', { email: 'asha@example.com' });
-    expect(calls[0].url.searchParams.get('redirect_to')).toBe('https://rk-associate.vliab.workers.dev/login?confirmed=1');
-    expect(calls[1].url.searchParams.get('redirect_to')).toBe('https://rk-associate.vliab.workers.dev/login?reset=1');
+    const call = (key) => calls.find((x) => x.key === key);
+    expect(call('POST /auth/v1/signup').url.searchParams.get('redirect_to')).toBe('https://rk-associate.vliab.workers.dev/login?confirmed=1');
+    expect(call('POST /auth/v1/recover').url.searchParams.get('redirect_to')).toBe('https://rk-associate.vliab.workers.dev/login?reset=1');
   });
 
   it('reset-password updates the password with the recovery token', async () => {

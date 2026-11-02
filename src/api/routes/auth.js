@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { validate as validateTarget } from '../lib/validate.js';
 import { setCookie, deleteCookie, getCookie } from 'hono/cookie';
 import { HTTPException } from 'hono/http-exception';
-import { anonClient } from '../lib/supabase.js';
+import { anonClient, serviceClient } from '../lib/supabase.js';
 import { rateLimit } from '../middleware/ratelimit.js';
 import { requireUser, ACCESS_COOKIE, REFRESH_COOKIE } from '../middleware/auth.js';
 
@@ -43,6 +43,23 @@ function sessionBody(session, user) {
 
 auth.post('/register', validate(registerSchema), async (c) => {
   const { email, password, full_name, phone, role } = c.req.valid('json');
+  // No outbound email yet: create the user already confirmed (sends no mail) and sign them straight in.
+  if (c.env.AUTO_CONFIRM_SIGNUPS === 'true') {
+    const { error: createError } = await serviceClient(c.env).auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name, phone, role },
+    });
+    if (createError) {
+      const exists = createError.code === 'email_exists' || createError.status === 422;
+      return c.json({ error: exists ? 'user_already_exists' : createError.code || 'signup_failed', message: createError.message }, exists ? 400 : 502);
+    }
+    const signedIn = await anonClient(c.env).auth.signInWithPassword({ email, password });
+    if (signedIn.error || !signedIn.data.session) return c.json({ error: 'signup_failed' }, 502);
+    setSessionCookies(c, signedIn.data.session);
+    return c.json({ ...sessionBody(signedIn.data.session, signedIn.data.user), needs_confirmation: false }, 201);
+  }
   const { data, error } = await anonClient(c.env).auth.signUp({
     email,
     password,

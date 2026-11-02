@@ -9,6 +9,7 @@ export default defineConfig({
       miniflare: {
         bindings: {
           ADMIN_REQUIRE_MFA: 'true',
+          AUTO_CONFIRM_SIGNUPS: 'false',
           SUPABASE_URL: 'https://sb.test',
           SUPABASE_ANON_KEY: 'test-anon-key',
           SUPABASE_SERVICE_ROLE_KEY: 'test-service-key',

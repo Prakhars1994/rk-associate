@@ -11,6 +11,8 @@ workers_dev = true
 APP_ENV = "production"
 # Comma-separated list of origins allowed to call the API cross-origin (same-origin needs nothing).
 ALLOWED_ORIGINS = "https://rk-associate.vliab.workers.dev"
+# No outbound email is configured yet, so new signups are confirmed server-side. Set to "false" once a sender exists.
+AUTO_CONFIRM_SIGNUPS = "true"
 # Website that hosts /login; used for email confirmation and password reset links.
 SITE_URL = "https://rk-associate.vliab.workers.dev"
 # Admin API requires a two-step (authenticator app) login. "false" only while admins set up their app.
