@@ -1,0 +1,1 @@
+import {PolicyPage} from "@/components/PolicyPage";import {policies} from "@/lib/policies";const p=policies.privacy;export const metadata={title:p.title,description:p.description,alternates:{canonical:p.slug}};export default function Page(){return <PolicyPage p={p}/>}
