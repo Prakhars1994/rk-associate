@@ -45,19 +45,33 @@ const listing = (table, fields, orderBy) => async (c) => {
 admin.get('/stats', async (c) => {
   const svc = serviceClient(c.env);
   const head = { count: 'exact', head: true };
-  const [users, enrolments, openTickets, paid] = await Promise.all([
+  const [users, enrolments, openTickets, paid, newEnquiries] = await Promise.all([
     svc.from('profiles').select('id', head),
     svc.from('enrollments').select('id', head).eq('payment_status', 'paid'),
     svc.from('tickets').select('id', head).in('status', ['open', 'in_progress', 'reopened']),
     svc.from('payments').select('amount_paise').eq('status', 'paid'),
+    svc.from('enquiries').select('id', head).eq('status', 'new'),
   ]);
   const revenue = unwrap(paid).reduce((s, p) => s + p.amount_paise, 0);
-  return c.json({ users: users.count ?? 0, paid_enrollments: enrolments.count ?? 0, open_tickets: openTickets.count ?? 0, revenue_paise: revenue });
+  return c.json({ users: users.count ?? 0, paid_enrollments: enrolments.count ?? 0, open_tickets: openTickets.count ?? 0, revenue_paise: revenue, new_enquiries: newEnquiries.count ?? 0 });
 });
 
 admin.get('/users', validate('query', paging), listing('profiles', 'id, email, full_name, phone, role, status, created_at, last_login_at', 'created_at'));
 admin.get('/enrollments', validate('query', paging), listing('enrollments', 'id, status, payment_status, progress_pct, enrolled_at, user:profiles(email, full_name), course:courses(slug, title)', 'enrolled_at'));
 admin.get('/payments', validate('query', paging), listing('payments', 'id, amount_paise, currency, status, method, razorpay_order_id, razorpay_payment_id, created_at, user:profiles(email, full_name)', 'created_at'));
+// Contact-page enquiries saved by the website (public.enquiries).
+admin.get('/enquiries', validate('query', paging), listing('enquiries', 'id, kind, name, mobile, email, company, service, course, experience, employee_count, preferred_batch, message, status, source_page, created_at', 'created_at'));
+
+admin.patch('/enquiries/:id', validate('param', z.object({ id: z.string().uuid() })), validate('json', z.object({
+  status: z.enum(['new', 'contacted', 'converted', 'closed']),
+})), async (c) => {
+  const { id } = c.req.valid('param');
+  const svc = serviceClient(c.env);
+  const enquiry = unwrap(await svc.from('enquiries').update(c.req.valid('json')).eq('id', id).select('id, status').maybeSingle());
+  if (!enquiry) throw new HTTPException(404, { message: 'not_found' });
+  unwrap(await svc.from('activity_logs').insert({ user_id: c.get('user').id, action: 'admin.update_enquiry', resource_type: 'enquiry', resource_id: id, details: c.req.valid('json') }));
+  return c.json({ enquiry });
+});
 
 admin.patch('/users/:id', validate('param', z.object({ id: z.string().uuid() })), validate('json', z.object({
   role: z.enum(['student', 'client', 'trainer', 'admin']).optional(),
