@@ -72,6 +72,22 @@ admin.patch('/enquiries/:id', validate('param', z.object({ id: z.string().uuid()
   return c.json({ enquiry });
 });
 
+// Nightly backups written by the cron job (src/backup.js) to R2.
+admin.get('/backups', async (c) => {
+  const listed = await c.env.FILES.list({ prefix: 'backups/', include: ['customMetadata'] });
+  const backups = listed.objects
+    .map((o) => ({ day: o.key.slice(8, 18), bytes: o.size, uploaded: o.uploaded, counts: o.customMetadata?.counts ? JSON.parse(o.customMetadata.counts) : null }))
+    .sort((a, b) => b.day.localeCompare(a.day));
+  return c.json({ backups });
+});
+
+admin.get('/backups/:day', validate('param', z.object({ day: z.string().regex(/^d{4}-d{2}-d{2}$/) })), async (c) => {
+  const { day } = c.req.valid('param');
+  const obj = await c.env.FILES.get(`backups/${day}.json.gz`);
+  if (!obj) throw new HTTPException(404, { message: 'not_found' });
+  return new Response(obj.body, { headers: { 'Content-Type': 'application/gzip', 'Content-Disposition': `attachment; filename="rk-backup-${day}.json.gz"`, 'Cache-Control': 'private, no-store' } });
+});
+
 admin.patch('/users/:id', validate('param', z.object({ id: z.string().uuid() })), validate('json', z.object({
   role: z.enum(['student', 'client', 'trainer', 'admin']).optional(),
   status: z.enum(['active', 'inactive', 'suspended']).optional(),

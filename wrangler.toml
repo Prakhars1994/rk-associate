@@ -24,6 +24,10 @@ SITE_URL = "https://rk-associate.vliab.workers.dev"
 binding = "FILES"
 bucket_name = "rk-associate-files"
 
+# Nightly database backup to R2 (src/backup.js) at 02:00 IST.
+[triggers]
+crons = ["30 20 * * *"]
+
 [observability]
 enabled = true
 
