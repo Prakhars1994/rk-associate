@@ -36,6 +36,8 @@ export const requireUser = createMiddleware(async (c, next) => {
  * MFA verify with aal "aal2". The token was already validated by requireUser, so reading its claims is safe.
  */
 export const requireAal2 = createMiddleware(async (c, next) => {
+  // Switch (wrangler.toml var) so admins can set up their authenticator app before it is enforced.
+  if (c.env.ADMIN_REQUIRE_MFA === 'false') return next();
   let aal;
   try {
     const payload = c.get('token').split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
