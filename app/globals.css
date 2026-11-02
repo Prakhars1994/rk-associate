@@ -307,7 +307,7 @@ footer a{color:inherit}.float a{text-decoration:none}
    RK ASSOCIATE - PREMIUM WHITE + APPLE RED (about 75% white / 25% red)
    Final override layer. Photos, slideshows and all markup are untouched.
    ================================================================ */
-:root{--rk:#D70015;--rk-bright:#FF3B30;--rk-deep:#7A000D;--rk-night:#3A0007;--rk-tint:#FFF2F2;--rk-ink:#1D1D1F;--rk-ink2:#6E6E73;--rk-gray:#F5F5F7;--rk-line:#E8E8ED;--rk-grad:linear-gradient(135deg,#8E0010 0%,#C4001A 45%,#E8112D 78%,#FF3B30 100%);--rk-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 30px rgba(0,0,0,.06);--rk-font:Inter,-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif}
+:root{--rk:#D70015;--rk-bright:#FF3B30;--rk-deep:#7A000D;--rk-night:#3A0007;--rk-tint:#FFF2F2;--rk-ink:#1D1D1F;--rk-ink2:#6E6E73;--rk-gray:#F5F5F7;--rk-line:#E8E8ED;--rk-grad:linear-gradient(135deg,#8E0010 0%,#C4001A 45%,#E8112D 78%,#FF3B30 100%);--rk-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 30px rgba(0,0,0,.06);--rk-font:var(--font-inter),Inter,-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif}
 html body{font-family:var(--rk-font);color:var(--rk-ink);background:#fff;-webkit-font-smoothing:antialiased;letter-spacing:-.011em}
 html body h1,html body h2,html body h3,html body .brand b,html body .slideCopy h2,html body .heroQuick b,html body .miniStats b,html body .serviceNo,html body .teamInitial{font-family:var(--rk-font)!important;letter-spacing:-.03em}
 html body h1{font-weight:700}html body h2{font-weight:700;color:var(--rk-ink)}html body h3{font-weight:600}
