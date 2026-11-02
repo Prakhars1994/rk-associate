@@ -47,17 +47,17 @@ footer a{color:inherit}.float a{text-decoration:none}
 /* premium licensed-photo visual system — local Pexels assets */
 .visualHero,.pageHero{isolation:isolate}
 .visualHero>*,.pageHero>*{position:relative;z-index:2}
-.hero.homeLuxury.visualHero{background-image:linear-gradient(90deg,rgba(20,7,12,.96) 0%,rgba(58,15,27,.90) 46%,rgba(58,15,27,.34) 72%,rgba(20,7,12,.18) 100%),url('/images/home-team.jpg');background-size:cover;background-position:center}
+.hero.homeLuxury.visualHero{background-image:linear-gradient(90deg,rgba(20,7,12,.96) 0%,rgba(58,15,27,.90) 46%,rgba(58,15,27,.34) 72%,rgba(20,7,12,.18) 100%),url('/images/w1600/home-team.webp');background-size:cover;background-position:center}
 .hero.homeLuxury.visualHero:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 65%,rgba(15,5,9,.5));z-index:0}
 .hero.homeLuxury.visualHero .heroCard{box-shadow:0 30px 80px #0008;border-color:#e6c67b55}
 .pageHero{position:relative;overflow:hidden;min-height:430px;display:flex;flex-direction:column;justify-content:center;padding-right:45%;background-size:cover!important;background-position:center!important}
 .pageHero:before{content:"";position:absolute;inset:0;z-index:0}
-.aboutHero{background-image:url('/images/about-team.jpg')!important}.aboutHero:before{background:linear-gradient(90deg,#fffaf2 0%,rgba(255,250,242,.97) 43%,rgba(255,250,242,.62) 62%,rgba(255,250,242,.08) 100%)}
-.servicesHero{background-image:url('/images/services-interview.jpg')!important}.servicesHero:before{background:linear-gradient(90deg,#100a0df7 0%,#291016ee 48%,#29101680 68%,#100a0d22 100%)}
-.courseHero{background-image:url('/images/courses-training.jpg')!important}.courseHero:before{background:linear-gradient(90deg,#3d101af5 0%,#641d2ce9 48%,#641d2c78 70%,transparent 100%)}
-.resourcesHero{background-image:url('/images/resources-office.jpg')!important}.resourcesHero:before{background:linear-gradient(90deg,#fff8f5f7 0%,#f6dfe2ef 47%,#f6dfe280 68%,transparent 100%)}
-.clientsHero{background-image:url('/images/clients-meeting.jpg')!important}.clientsHero:before{background:linear-gradient(90deg,#161018f8 0%,#32121bef 48%,#32121b78 70%,transparent 100%)}
-.contactHero{background-image:url('/images/contact-consult.jpg')!important}.contactHero:before{background:linear-gradient(90deg,#3d101af6 0%,#7a263aeb 48%,#7a263a70 70%,transparent 100%)}
+.aboutHero{background-image:url('/images/w1600/about-team.webp')!important}.aboutHero:before{background:linear-gradient(90deg,#fffaf2 0%,rgba(255,250,242,.97) 43%,rgba(255,250,242,.62) 62%,rgba(255,250,242,.08) 100%)}
+.servicesHero{background-image:url('/images/w1600/services-interview.webp')!important}.servicesHero:before{background:linear-gradient(90deg,#100a0df7 0%,#291016ee 48%,#29101680 68%,#100a0d22 100%)}
+.courseHero{background-image:url('/images/w1600/courses-training.webp')!important}.courseHero:before{background:linear-gradient(90deg,#3d101af5 0%,#641d2ce9 48%,#641d2c78 70%,transparent 100%)}
+.resourcesHero{background-image:url('/images/w1600/resources-office.webp')!important}.resourcesHero:before{background:linear-gradient(90deg,#fff8f5f7 0%,#f6dfe2ef 47%,#f6dfe280 68%,transparent 100%)}
+.clientsHero{background-image:url('/images/w1600/clients-meeting.webp')!important}.clientsHero:before{background:linear-gradient(90deg,#161018f8 0%,#32121bef 48%,#32121b78 70%,transparent 100%)}
+.contactHero{background-image:url('/images/w1600/contact-consult.webp')!important}.contactHero:before{background:linear-gradient(90deg,#3d101af6 0%,#7a263aeb 48%,#7a263a70 70%,transparent 100%)}
 .pageHero h1{max-width:760px;text-shadow:0 2px 20px rgba(0,0,0,.08)}.servicesHero h1,.courseHero h1,.clientsHero h1,.contactHero h1{text-shadow:0 4px 24px #0008}
 .section{position:relative}.card{box-shadow:0 10px 30px rgba(61,16,26,.06);border-color:#ead9dc}.card:hover{transform:translateY(-7px);box-shadow:0 24px 55px rgba(61,16,26,.16)}
 .serviceCard,.courseDetailCard,.resourceCard,.industryCard,.teamCard{overflow:hidden}.serviceCard:after,.courseDetailCard:after,.resourceCard:after,.industryCard:after,.teamCard:after{content:"";position:absolute;width:110px;height:110px;border-radius:50%;right:-60px;bottom:-60px;background:radial-gradient(circle,#d7b46a24,transparent 68%);pointer-events:none}
@@ -329,7 +329,7 @@ html body .btn.light,html body .homeLuxury .btn{background:#fff!important;color:
 html body .homeLuxury .btn.ghost,html body .btn.outline{background:transparent!important;color:#fff!important;box-shadow:inset 0 0 0 1.5px #ffffffb3}
 
 /* hero: keep the photo, wash it in deep red */
-html body .hero.homeLuxury.visualHero{background-image:linear-gradient(90deg,rgba(70,0,10,.94) 0%,rgba(150,0,20,.82) 45%,rgba(215,0,21,.34) 78%,rgba(215,0,21,.10) 100%),url('/images/home-team.jpg')!important}
+html body .hero.homeLuxury.visualHero{background-image:linear-gradient(90deg,rgba(70,0,10,.94) 0%,rgba(150,0,20,.82) 45%,rgba(215,0,21,.34) 78%,rgba(215,0,21,.10) 100%),url('/images/w1600/home-team.webp')!important}
 html body .homeLuxury h1,html body .homeLuxury .lead{color:#fff!important}html body .homeLuxury .eyebrow{color:#ffd7d2!important}
 html body .homeLuxury .heroCard{background:#ffffff1f!important;border:1px solid #ffffff40!important}
 html body .heroQuick{background:#ffffff1f!important;border-color:#ffffff4d!important}
@@ -440,3 +440,5 @@ html body .stat{border-color:#ffffff33!important}
 .adminTabs{flex-wrap:wrap}.adminTabs button{min-width:120px}.adminTable.tab-enquiries td:nth-child(6){white-space:pre-line;min-width:220px}
 .mfaSteps{padding-left:1.2em;line-height:1.6}.mfaSteps li{margin:6px 0}.mfaQr{display:block;margin:10px 0;border:1px solid #0000001a;border-radius:12px;background:#fff;padding:8px}.mfaSteps code{word-break:break-all;font-size:.85em}
 .policyPage{max-width:860px;margin:0 auto}.policyPage h1{font-size:clamp(1.9rem,4vw,2.6rem)}.policySection{margin:22px 0}.policySection h2{font-size:1.25rem;margin-bottom:6px}.policySection ul{padding-left:1.2em;line-height:1.7}.policyNav{margin-top:28px;font-size:.95rem}
+
+@media (max-width:900px){html body .hero.homeLuxury.visualHero{background-image:linear-gradient(90deg,rgba(70,0,10,.94) 0%,rgba(150,0,20,.82) 45%,rgba(215,0,21,.34) 78%,rgba(215,0,21,.10) 100%),url('/images/w800/home-team.webp')!important}.aboutHero{background-image:url('/images/w800/about-team.webp')!important}.servicesHero{background-image:url('/images/w800/services-interview.webp')!important}.courseHero{background-image:url('/images/w800/courses-training.webp')!important}.resourcesHero{background-image:url('/images/w800/resources-office.webp')!important}.clientsHero{background-image:url('/images/w800/clients-meeting.webp')!important}.contactHero{background-image:url('/images/w800/contact-consult.webp')!important}}
