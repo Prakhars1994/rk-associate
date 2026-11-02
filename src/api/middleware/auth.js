@@ -31,6 +31,20 @@ export const requireUser = createMiddleware(async (c, next) => {
   await next();
 });
 
+/**
+ * Use after requireUser. Requires a two-step (TOTP) session: Supabase marks tokens issued after an
+ * MFA verify with aal "aal2". The token was already validated by requireUser, so reading its claims is safe.
+ */
+export const requireAal2 = createMiddleware(async (c, next) => {
+  let aal;
+  try {
+    const payload = c.get('token').split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    aal = JSON.parse(atob(payload.padEnd(payload.length + ((4 - (payload.length % 4)) % 4), '='))).aal;
+  } catch { /* not a JWT */ }
+  if (aal !== 'aal2') throw new HTTPException(403, { message: 'mfa_required' });
+  await next();
+});
+
 /** Use after requireUser. */
 export const requireRole = (...roles) =>
   createMiddleware(async (c, next) => {

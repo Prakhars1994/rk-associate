@@ -4,11 +4,11 @@ import { zValidator } from '@hono/zod-validator';
 import { HTTPException } from 'hono/http-exception';
 import { serviceClient } from '../lib/supabase.js';
 import { validate, unwrap } from '../lib/validate.js';
-import { requireUser, requireRole } from '../middleware/auth.js';
+import { requireUser, requireRole, requireAal2 } from '../middleware/auth.js';
 
-// Admin-only. Uses the service role after the role check, for cross-user reports.
+// Admin-only, with two-step login. Uses the service role after the checks, for cross-user reports.
 const admin = new Hono();
-admin.use('*', requireUser, requireRole('admin'));
+admin.use('*', requireUser, requireRole('admin'), requireAal2);
 
 const paging = z.object({
   page: z.coerce.number().int().min(1).default(1),
