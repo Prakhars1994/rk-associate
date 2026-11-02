@@ -13,6 +13,8 @@ APP_ENV = "production"
 ALLOWED_ORIGINS = "https://rk-associate.vliab.workers.dev"
 # Website that hosts /login; used for email confirmation and password reset links.
 SITE_URL = "https://rk-associate.vliab.workers.dev"
+# Admin API requires a two-step (authenticator app) login. "false" only while admins set up their app.
+ADMIN_REQUIRE_MFA = "false"
 
 # Secrets (set with `wrangler secret put NAME`, never commit):
 # SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY,
