@@ -1,0 +1,9 @@
+# Copy to .dev.vars for `wrangler dev`. Never commit .dev.vars.
+SUPABASE_URL=https://YOUR-PROJECT.supabase.co
+SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+RAZORPAY_KEY_ID=rzp_test_
+RAZORPAY_KEY_SECRET=
+RAZORPAY_WEBHOOK_SECRET=
+SENDGRID_API_KEY=
+SENDGRID_FROM_EMAIL=noreply@rkassociate.com

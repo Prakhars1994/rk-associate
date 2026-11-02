@@ -1,0 +1,49 @@
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import { secureHeaders } from 'hono/secure-headers';
+import { HTTPException } from 'hono/http-exception';
+import auth from './routes/auth.js';
+import { catalogue, learner } from './routes/courses.js';
+import { payments, razorpayWebhook } from './routes/payments.js';
+import tickets from './routes/tickets.js';
+import admin from './routes/admin.js';
+import files from './routes/files.js';
+import { certificatesPublic, certificatesMine } from './routes/certificates.js';
+
+const api = new Hono();
+
+api.use('*', secureHeaders());
+api.use('*', (c, next) => {
+  const allowed = (c.env?.ALLOWED_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
+  return cors({
+    origin: (origin) => (allowed.includes(origin) ? origin : null),
+    allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 600,
+  })(c, next);
+});
+
+api.get('/health', (c) =>
+  c.json({ ok: true, service: 'rk-associate-api', env: c.env?.APP_ENV ?? 'unknown' })
+);
+
+api.route('/auth', auth);
+api.route('/', catalogue);
+api.route('/me', learner);
+api.route('/me', certificatesMine);
+api.route('/certificates', certificatesPublic);
+api.route('/payments', payments);
+api.route('/tickets', tickets);
+api.route('/admin', admin);
+api.route('/files', files);
+api.route('/webhooks/razorpay', razorpayWebhook);
+
+api.onError((err, c) => {
+  if (err instanceof HTTPException) {
+    return c.json({ error: err.message || 'error' }, err.status);
+  }
+  console.error('Unhandled API error', err);
+  return c.json({ error: 'internal_error' }, 500);
+});
+
+export default api;

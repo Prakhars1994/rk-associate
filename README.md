@@ -98,3 +98,19 @@ vdldigital.com
 
 ## License
 MIT
+
+## Phase 2 development (backend)
+
+See [docs/PHASE2-MASTER-PLAN.md](docs/PHASE2-MASTER-PLAN.md) for the slice-by-slice plan.
+
+```bash
+npm install            # .npmrc sets legacy-peer-deps
+cp .dev.vars.example .dev.vars   # fill in keys for local dev
+npm run dev            # wrangler dev: /api/*
+npm test               # Vitest inside the Workers runtime
+npm run deploy         # wrangler deploy
+```
+
+- `src/worker.js` is the API-only entry (worker `rk-associate-api`): `/api/*` → Hono app in `src/api/`. The live site is a separate Next.js app; never deploy this repo as `rk-associate`.
+- Database migrations live in `supabase/migrations/` (Supabase Postgres + Auth + RLS).
+- `phase2-api.js`, `phase2-schema.sql` and `worker-combined.js` are the old prototypes, kept only as a reference for the endpoint list. Do not deploy them.
