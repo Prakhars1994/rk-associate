@@ -83,9 +83,19 @@ export function AdminDashboard(){
 
   async function downloadCsv(){
     if(!session)return;
-    const res=await fetch(`${API}/admin/${tab}?page=${page}&per_page=200&format=csv`,{headers:{Authorization:`Bearer ${session.access_token}`}});
-    if(!res.ok){setMsg(explain());return}
-    const url=URL.createObjectURL(await res.blob());
+    // Export every row, 200 per request (the API maximum), not just the page on screen.
+    // Cells can contain line breaks (quoted), so pages are joined by stripping each page's header line only.
+    let header="";const bodies:string[]=[];
+    for(let p=1;p<=100;p++){
+      const res=await fetch(`${API}/admin/${tab}?page=${p}&per_page=200&format=csv`,{headers:{Authorization:`Bearer ${session.access_token}`}}).catch(()=>null);
+      if(!res?.ok){setMsg(explain());return}
+      const text=await res.text();
+      const nl=text.indexOf("\n");
+      if(!text||nl<0)break; // empty page (or header only): done
+      header=text.slice(0,nl);bodies.push(text.slice(nl+1));
+    }
+    if(!bodies.length){setMsg("Nothing to export yet.");return}
+    const url=URL.createObjectURL(new Blob(["﻿"+header+"\n"+bodies.join("\n")],{type:"text/csv;charset=utf-8"}));
     const a=document.createElement("a");a.href=url;a.download=`rk-${tab}-${new Date().toISOString().slice(0,10)}.csv`;a.click();
     setTimeout(()=>URL.revokeObjectURL(url),10000);
   }
@@ -102,7 +112,7 @@ export function AdminDashboard(){
     <div className="payTabs adminTabs" role="tablist">{(["enquiries","payments","enrollments","users"] as Tab[]).map(t=><button key={t} type="button" role="tab" aria-selected={tab===t} className={tab===t?"active":""} onClick={()=>{setTab(t);setPage(1)}}>{{enquiries:"Enquiries",payments:"Payments",enrollments:"Enrolments",users:"Students"}[t]}</button>)}</div>
     <div className="adminBar"><span>{rows?`${total} total`:"Loading…"}</span><button type="button" className="payCancel" onClick={downloadCsv} disabled={!rows?.length}>Download CSV</button></div>
     {msg&&<p className="payNote" role="alert">{msg}</p>}
-    <div className="adminTableWrap"><table className="adminTable">
+    <div className="adminTableWrap"><table className={`adminTable tab-${tab}`}>
       <thead><tr>{columns[tab].map(c=><th key={c.label}>{c.label}</th>)}{tab==="enquiries"&&<th>Status</th>}</tr></thead>
       <tbody>{rows?.length===0?<tr><td colSpan={7}>Nothing here yet.</td></tr>:rows?.map(r=><tr key={r.id}>{columns[tab].map(c=><td key={c.label}>{c.get(r)}</td>)}{tab==="enquiries"&&<td><select aria-label="Enquiry status" value={r.status} onChange={e=>setEnquiryStatus(r.id,e.target.value)}>{ENQUIRY_STATUSES.map(s=><option key={s} value={s}>{s}</option>)}</select></td>}</tr>)}</tbody>
     </table></div>
