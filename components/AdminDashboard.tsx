@@ -4,7 +4,7 @@ import {useCallback,useEffect,useState} from "react";
 import {API,adminSignOut,apiCall,explain,readAdminSession,saveAdminSession,type Session} from "@/lib/studentApi";
 
 // /admin: office view of enquiries, payments, enrolments and students (rk-associate-api /admin/*, admin role only).
-type Tab="enquiries"|"payments"|"enrollments"|"users";
+type Tab="enquiries"|"payments"|"enrollments"|"users"|"backups";
 type Row=Record<string,any>;
 type Stats={users:number;paid_enrollments:number;open_tickets:number;revenue_paise:number;new_enquiries?:number};
 
@@ -45,6 +45,12 @@ const columns:Record<Tab,{label:string;get:(r:Row)=>React.ReactNode}[]>={
     {label:"Role",get:r=>r.role},
     {label:"Last login",get:r=>r.last_login_at?when(r.last_login_at):"—"},
   ],
+  backups:[
+    {label:"Backup of",get:r=>new Date(r.day+"T00:00:00Z").toLocaleDateString("en-IN",{dateStyle:"medium"})},
+    {label:"Saved at",get:r=>when(r.uploaded)},
+    {label:"Size",get:r=>r.bytes>1048576?`${(r.bytes/1048576).toFixed(1)} MB`:`${Math.max(1,Math.round(r.bytes/1024))} KB`},
+    {label:"Records",get:r=>r.counts?Object.values(r.counts as Record<string,number>).reduce((a,b)=>a+b,0).toLocaleString("en-IN"):"—"},
+  ],
 };
 
 export function AdminDashboard(){
@@ -68,7 +74,7 @@ export function AdminDashboard(){
     apiCall(`/admin/${tab}?page=${page}&per_page=${perPage}`,{token:session.access_token}).then(({status,data})=>{
       if(guard(status))return;
       if(status!==200){setMsg(explain(data.error));setRows([]);return}
-      setRows(data[tab]||[]);setTotal(data.total||0);
+      setRows(data[tab]||[]);setTotal(data.total??(data[tab]||[]).length);
     });
   },[session,tab,page,denied,guard]);
 
@@ -79,6 +85,15 @@ export function AdminDashboard(){
     if(code!==200){setMsg(explain(data.error));return}
     setRows(rs=>rs&&rs.map(r=>r.id===id?{...r,status}:r));
     setStats(s=>s&&s.new_enquiries!==undefined?{...s,new_enquiries:s.new_enquiries+(status==="new"?1:0)-(rows?.find(r=>r.id===id)?.status==="new"?1:0)}:s);
+  }
+
+  async function downloadBackup(day:string){
+    if(!session)return;
+    const res=await fetch(`${API}/admin/backups/${day}`,{headers:{Authorization:`Bearer ${session.access_token}`}}).catch(()=>null);
+    if(!res?.ok){if(res&&guard(res.status))return;setMsg(explain());return}
+    const url=URL.createObjectURL(await res.blob());
+    const a=document.createElement("a");a.href=url;a.download=`rk-backup-${day}.json.gz`;a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),10000);
   }
 
   async function downloadCsv(){
@@ -109,12 +124,12 @@ export function AdminDashboard(){
   return <section className="section adminDash">
     <div className="sectionHead"><span className="eyebrow">ADMIN</span><h1>RK Associate dashboard</h1><p>Signed in as {session.email}. <button type="button" className="payCancel" onClick={async()=>{await adminSignOut();location.assign("/admin/login")}}>Log out</button></p></div>
     <div className="adminTiles">{tiles.map(([k,v])=><div className="card" key={k}><span className="eyebrow">{k}</span><b>{v??"…"}</b></div>)}</div>
-    <div className="payTabs adminTabs" role="tablist">{(["enquiries","payments","enrollments","users"] as Tab[]).map(t=><button key={t} type="button" role="tab" aria-selected={tab===t} className={tab===t?"active":""} onClick={()=>{setTab(t);setPage(1)}}>{{enquiries:"Enquiries",payments:"Payments",enrollments:"Enrolments",users:"Students"}[t]}</button>)}</div>
-    <div className="adminBar"><span>{rows?`${total} total`:"Loading…"}</span><button type="button" className="payCancel" onClick={downloadCsv} disabled={!rows?.length}>Download CSV</button></div>
+    <div className="payTabs adminTabs" role="tablist">{(["enquiries","payments","enrollments","users","backups"] as Tab[]).map(t=><button key={t} type="button" role="tab" aria-selected={tab===t} className={tab===t?"active":""} onClick={()=>{setTab(t);setPage(1)}}>{{enquiries:"Enquiries",payments:"Payments",enrollments:"Enrolments",users:"Students",backups:"Backups"}[t]}</button>)}</div>
+    <div className="adminBar"><span>{rows?`${total} total`:"Loading…"}</span>{tab==="backups"?<span>Saved automatically every night at 2:00 am, last 30 days kept.</span>:<button type="button" className="payCancel" onClick={downloadCsv} disabled={!rows?.length}>Download CSV</button>}</div>
     {msg&&<p className="payNote" role="alert">{msg}</p>}
     <div className="adminTableWrap"><table className={`adminTable tab-${tab}`}>
-      <thead><tr>{columns[tab].map(c=><th key={c.label}>{c.label}</th>)}{tab==="enquiries"&&<th>Status</th>}</tr></thead>
-      <tbody>{rows?.length===0?<tr><td colSpan={7}>Nothing here yet.</td></tr>:rows?.map(r=><tr key={r.id}>{columns[tab].map(c=><td key={c.label}>{c.get(r)}</td>)}{tab==="enquiries"&&<td><select aria-label="Enquiry status" value={r.status} onChange={e=>setEnquiryStatus(r.id,e.target.value)}>{ENQUIRY_STATUSES.map(s=><option key={s} value={s}>{s}</option>)}</select></td>}</tr>)}</tbody>
+      <thead><tr>{columns[tab].map(c=><th key={c.label}>{c.label}</th>)}{tab==="enquiries"&&<th>Status</th>}{tab==="backups"&&<th>File</th>}</tr></thead>
+      <tbody>{rows?.length===0?<tr><td colSpan={7}>Nothing here yet.</td></tr>:rows?.map(r=><tr key={r.id||r.day}>{columns[tab].map(c=><td key={c.label}>{c.get(r)}</td>)}{tab==="enquiries"&&<td><select aria-label="Enquiry status" value={r.status} onChange={e=>setEnquiryStatus(r.id,e.target.value)}>{ENQUIRY_STATUSES.map(s=><option key={s} value={s}>{s}</option>)}</select></td>}{tab==="backups"&&<td><button type="button" className="payCancel" onClick={()=>downloadBackup(r.day)}>Download</button></td>}</tr>)}</tbody>
     </table></div>
     {pages>1&&<div className="adminBar"><button type="button" className="payCancel" disabled={page<=1} onClick={()=>setPage(p=>p-1)}>← Newer</button><span>Page {page} of {pages}</span><button type="button" className="payCancel" disabled={page>=pages} onClick={()=>setPage(p=>p+1)}>Older →</button></div>}
   </section>;
