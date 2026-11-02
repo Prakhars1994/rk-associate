@@ -12,17 +12,22 @@ const nonExistentModuleId = '00000000-0000-0000-0000-000000000000';
 const hrCourseId = 'abcf1efb-996d-43a1-9021-c6a05b0834b2';
 
 const adminMocks = {
-  'GET /auth/v1/user': ({ headers }) => 
-    headers.get('authorization') === `Bearer ${adminToken}` ? [200, adminUser] : [401, { error: 'unauthorized' }],
-  'GET /rest/v1/profiles': ({ headers }) =>
-    headers.get('authorization') === `Bearer ${adminToken}` ? [200, { id: adminUser.id, role: 'admin', status: 'active' }] : [200, []],
+  'GET /auth/v1/user': ({ headers }) =>
+    headers.get('authorization') === `Bearer ${adminToken}` ? [200, { user: adminUser }] : [401, { error: 'unauthorized' }],
+  'GET /rest/v1/profiles': ({ url }) => {
+    // Match query for admin user's profile
+    if (url.searchParams.get('id') === `eq.${adminUser.id}`) {
+      return [200, [{ id: adminUser.id, role: 'admin', status: 'active' }]];
+    }
+    return [200, []];
+  },
 };
 
 describe('Admin API E2E', () => {
   it('adds YouTube content to course module', async () => {
-    mockSupabase({
+    const calls = mockSupabase({
       ...adminMocks,
-      'GET /rest/v1/course_modules': ({ url }) => 
+      'GET /rest/v1/course_modules': ({ url }) =>
         url.searchParams.get('id') === `eq.${testModuleId}` ? [200, [{ id: testModuleId, course_id: hrCourseId }]] : [200, []],
       'POST /rest/v1/course_module_content': () => [201, {
         id: 'content-123',
@@ -40,6 +45,12 @@ describe('Admin API E2E', () => {
         video_title: 'HR Basics',
       }),
     });
+
+    if (res.status !== 201) {
+      const text = await res.text();
+      console.log('Calls made:', calls.map(c => ({ ...c, body: c.body ? JSON.stringify(c.body) : null })));
+      console.log('Error response:', text);
+    }
 
     expect(res.status).toBe(201);
     const data = await res.json();
