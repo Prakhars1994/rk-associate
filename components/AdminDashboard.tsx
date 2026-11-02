@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import {useCallback,useEffect,useState} from "react";
-import {API,apiCall,explain,readSession,saveSession,signOut,type Session} from "@/lib/studentApi";
+import {API,adminSignOut,apiCall,explain,readAdminSession,saveAdminSession,type Session} from "@/lib/studentApi";
 
 // /admin: office view of enquiries, payments, enrolments and students (rk-associate-api /admin/*, admin role only).
 type Tab="enquiries"|"payments"|"enrollments"|"users";
@@ -58,9 +58,9 @@ export function AdminDashboard(){
   const [msg,setMsg]=useState("");
   const perPage=50;
 
-  const guard=useCallback((status:number)=>{if(status===401){saveSession(null);setSession(null);return true}if(status===403){setDenied(true);return true}return false},[]);
+  const guard=useCallback((status:number)=>{if(status===401||status===403){saveAdminSession(null);setSession(null);if(status===403)setDenied(true);return true}return false},[]);
 
-  useEffect(()=>{const s=readSession();setSession(s);if(!s)return;apiCall("/admin/stats",{token:s.access_token}).then(({status,data})=>{if(!guard(status))setStats(data as Stats)})},[guard]);
+  useEffect(()=>{const s=readAdminSession();setSession(s);if(!s)location.replace("/admin/login");if(!s)return;apiCall("/admin/stats",{token:s.access_token}).then(({status,data})=>{if(!guard(status))setStats(data as Stats)})},[guard]);
 
   useEffect(()=>{
     if(!session||denied)return;
@@ -101,13 +101,13 @@ export function AdminDashboard(){
   }
 
   if(session===undefined)return <section className="section"><p>Loading…</p></section>;
-  if(!session)return <section className="section studentAuth"><div className="formPanel"><span className="eyebrow">ADMIN</span><h1>Please log in</h1><p>Log in with an admin account to see enquiries, payments and students.</p><Link className="btn" href="/login?next=/admin">Log in</Link></div></section>;
-  if(denied)return <section className="section studentAuth"><div className="formPanel"><span className="eyebrow">ADMIN</span><h1>No admin access</h1><p>{session.email} is not an admin account. Ask RK Associate to give this account admin access.</p><button type="button" className="payCancel" onClick={async()=>{await signOut();location.assign("/login?next=/admin")}}>Log in with a different account</button></div></section>;
+  if(denied)return <section className="section studentAuth"><div className="formPanel"><span className="eyebrow">ADMIN</span><h1>No admin access</h1><p>This account no longer has admin access.</p><Link className="btn" href="/admin/login">Admin login</Link></div></section>;
+  if(!session)return <section className="section"><p>Redirecting to admin login…</p></section>;
 
   const tiles:[string,string|number|undefined][]=[["New enquiries",stats?.new_enquiries],["Revenue",stats?rupees(stats.revenue_paise):undefined],["Paid enrolments",stats?.paid_enrollments],["Students",stats?.users],["Open tickets",stats?.open_tickets]];
   const pages=Math.max(1,Math.ceil(total/perPage));
   return <section className="section adminDash">
-    <div className="sectionHead"><span className="eyebrow">ADMIN</span><h1>RK Associate dashboard</h1><p>Signed in as {session.email}. <button type="button" className="payCancel" onClick={async()=>{await signOut();location.assign("/login")}}>Log out</button></p></div>
+    <div className="sectionHead"><span className="eyebrow">ADMIN</span><h1>RK Associate dashboard</h1><p>Signed in as {session.email}. <button type="button" className="payCancel" onClick={async()=>{await adminSignOut();location.assign("/admin/login")}}>Log out</button></p></div>
     <div className="adminTiles">{tiles.map(([k,v])=><div className="card" key={k}><span className="eyebrow">{k}</span><b>{v??"…"}</b></div>)}</div>
     <div className="payTabs adminTabs" role="tablist">{(["enquiries","payments","enrollments","users"] as Tab[]).map(t=><button key={t} type="button" role="tab" aria-selected={tab===t} className={tab===t?"active":""} onClick={()=>{setTab(t);setPage(1)}}>{{enquiries:"Enquiries",payments:"Payments",enrollments:"Enrolments",users:"Students"}[t]}</button>)}</div>
     <div className="adminBar"><span>{rows?`${total} total`:"Loading…"}</span><button type="button" className="payCancel" onClick={downloadCsv} disabled={!rows?.length}>Download CSV</button></div>

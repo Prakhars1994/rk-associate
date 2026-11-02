@@ -3,11 +3,15 @@
 
 export const API=process.env.NEXT_PUBLIC_API_URL||"https://rk-associate-api.vliab.workers.dev/api";
 const SESSION_KEY="rk_api_session";
+// Admin sessions are stored separately, so the office login never doubles as a student login on the public site.
+const ADMIN_SESSION_KEY="rk_admin_session";
 
 export type Session={access_token:string;expires_at:number;email:string;name?:string;phone?:string};
 
-export function readSession():Session|null{try{const s=JSON.parse(sessionStorage.getItem(SESSION_KEY)||"null") as Session|null;return s&&s.expires_at*1000>Date.now()+60000?s:null}catch{return null}}
-export function saveSession(s:Session|null){try{s?sessionStorage.setItem(SESSION_KEY,JSON.stringify(s)):sessionStorage.removeItem(SESSION_KEY)}catch{}}
+export function readSession(key=SESSION_KEY):Session|null{try{const s=JSON.parse(sessionStorage.getItem(key)||"null") as Session|null;return s&&s.expires_at*1000>Date.now()+60000?s:null}catch{return null}}
+export function saveSession(s:Session|null,key=SESSION_KEY){try{s?sessionStorage.setItem(key,JSON.stringify(s)):sessionStorage.removeItem(key)}catch{}}
+export const readAdminSession=()=>readSession(ADMIN_SESSION_KEY);
+export const saveAdminSession=(s:Session|null)=>saveSession(s,ADMIN_SESSION_KEY);
 
 export async function apiCall(path:string,{body,token,method}:{body?:unknown;token?:string;method?:string}={}){
   const res=await fetch(`${API}${path}`,{method:method||(body===undefined?"GET":"POST"),headers:{...(body!==undefined?{"Content-Type":"application/json"}:{}),...(token?{Authorization:`Bearer ${token}`}:{})},body:body===undefined?undefined:JSON.stringify(body)}).catch(()=>null);
@@ -36,3 +40,22 @@ export async function signIn(mode:"login"|"register",f:{email:string;password:st
 }
 
 export async function signOut(){const s=readSession();saveSession(null);await apiCall("/auth/logout",{body:{},token:s?.access_token})}
+
+// Admin login: password sign-in, then the account must have the admin role or the session is discarded at once.
+// Same message for wrong password and non-admin accounts, so the page doesn't reveal which emails are staff.
+export async function adminSignIn(email:string,password:string):Promise<{session?:Session;message?:string}>{
+  const denied="Email or password is incorrect, or this account does not have admin access.";
+  const {status,data}=await apiCall("/auth/login",{body:{email:email.trim().toLowerCase(),password}});
+  if(status===429)return {message:explain("too_many_requests")};
+  if(status===0)return {message:"Could not reach the server. Check your internet connection and try again."};
+  if(status!==200||!data.access_token)return {message:denied};
+  const me=await apiCall("/auth/me",{token:data.access_token});
+  if(me.status!==200||me.data.profile?.role!=="admin"||me.data.profile?.status!=="active"){
+    await apiCall("/auth/logout",{body:{},token:data.access_token});
+    return {message:denied};
+  }
+  const session:Session={access_token:data.access_token,expires_at:data.expires_at,email:data.user?.email||email,name:me.data.profile?.full_name};
+  saveAdminSession(session);
+  return {session};
+}
+export async function adminSignOut(){const s=readAdminSession();saveAdminSession(null);await apiCall("/auth/logout",{body:{},token:s?.access_token})}
