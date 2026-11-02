@@ -59,10 +59,10 @@ export function PayButton({title}:{title:string}){
         <button type="button" role="tab" aria-selected={mode==="register"} className={mode==="register"?"active":""} onClick={()=>{setMode("register");setMsg("")}}>New student</button>
         <button type="button" role="tab" aria-selected={mode==="login"} className={mode==="login"?"active":""} onClick={()=>{setMode("login");setMsg("")}}>I have an account</button>
       </div>
-      {mode==="register"&&<input name="name" placeholder="Full name" autoComplete="name" required minLength={2} maxLength={120}/>}
-      <input name="email" type="email" placeholder="Email" autoComplete="email" required maxLength={255}/>
-      {mode==="register"&&<input name="phone" inputMode="tel" placeholder="Mobile" autoComplete="tel" pattern="[0-9+\- ]{7,20}"/>}
-      <input name="password" type="password" placeholder={mode==="register"?"Create a password (min 8 characters)":"Password"} autoComplete={mode==="register"?"new-password":"current-password"} required minLength={mode==="register"?8:1} maxLength={72}/>
+      {mode==="register"&&<input name="name" placeholder="Full name" aria-label="Full name" autoComplete="name" required minLength={2} maxLength={120}/>}
+      <input name="email" type="email" placeholder="Email" aria-label="Email" autoComplete="email" required maxLength={255}/>
+      {mode==="register"&&<input name="phone" inputMode="tel" placeholder="Mobile" aria-label="Mobile" autoComplete="tel" pattern="[0-9+\- ]{7,20}"/>}
+      <input name="password" type="password" placeholder={mode==="register"?"Create a password (min 8 characters)":"Password"} aria-label={mode==="register"?"Create a password (min 8 characters)":"Password"} autoComplete={mode==="register"?"new-password":"current-password"} required minLength={mode==="register"?8:1} maxLength={72}/>
       <button className="btn" type="submit">{mode==="register"?"Create account & pay":"Log in & pay"} {price}</button>
       <button type="button" className="payCancel" onClick={()=>{setStep("idle");setMsg("")}}>Cancel</button>
       {mode==="login"&&<Link className="payCancel" href="/login#forgot">Forgot password?</Link>}

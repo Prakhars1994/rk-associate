@@ -54,11 +54,11 @@ export function StudentLogin(){
         <button type="button" role="tab" aria-selected={mode==="register"} className={mode==="register"?"active":""} onClick={()=>go("register")}>New student</button>
       </div>}
       <form className="form" onSubmit={submit}>
-        {mode==="register"&&<input name="name" placeholder="Full name" autoComplete="name" required minLength={2} maxLength={120}/>}
-        {mode!=="reset"&&<input name="email" type="email" placeholder="Email" autoComplete="email" required maxLength={255}/>}
-        {mode==="register"&&<input name="phone" inputMode="tel" placeholder="Mobile" autoComplete="tel" pattern="[0-9+\- ]{7,20}"/>}
-        {mode!=="forgot"&&<input name="password" type="password" placeholder={mode==="login"?"Password":"New password (min 8 characters)"} autoComplete={mode==="login"?"current-password":"new-password"} required minLength={mode==="login"?1:8} maxLength={72}/>}
-        {mode==="reset"&&<input name="confirm" type="password" placeholder="Repeat new password" autoComplete="new-password" required minLength={8} maxLength={72}/>}
+        {mode==="register"&&<input name="name" placeholder="Full name" aria-label="Full name" autoComplete="name" required minLength={2} maxLength={120}/>}
+        {mode!=="reset"&&<input name="email" type="email" placeholder="Email" aria-label="Email" autoComplete="email" required maxLength={255}/>}
+        {mode==="register"&&<input name="phone" inputMode="tel" placeholder="Mobile" aria-label="Mobile" autoComplete="tel" pattern="[0-9+\- ]{7,20}"/>}
+        {mode!=="forgot"&&<input name="password" type="password" placeholder={mode==="login"?"Password":"New password (min 8 characters)"} aria-label={mode==="login"?"Password":"New password (min 8 characters)"} autoComplete={mode==="login"?"current-password":"new-password"} required minLength={mode==="login"?1:8} maxLength={72}/>}
+        {mode==="reset"&&<input name="confirm" type="password" placeholder="Repeat new password" aria-label="Repeat new password" autoComplete="new-password" required minLength={8} maxLength={72}/>}
         <button className="btn" type="submit" disabled={busy}>{busy?"Please wait…":{login:"Log in",register:"Create account",forgot:"Send reset link",reset:"Save new password"}[mode]}</button>
       </form>
       {msg&&<p className="payNote" role="status">{msg}</p>}

@@ -45,8 +45,8 @@ export function AdminLogin(){
         <h1>Admin login</h1>
         <p>For RK Associate office staff. Students should use the <a href="/login">student login</a>.</p>
         <form className="form" onSubmit={submitPassword}>
-          <input name="email" type="email" placeholder="Admin email" autoComplete="username" required maxLength={255}/>
-          <input name="password" type="password" placeholder="Password" autoComplete="current-password" required maxLength={72}/>
+          <input name="email" type="email" placeholder="Admin email" aria-label="Admin email" autoComplete="username" required maxLength={255}/>
+          <input name="password" type="password" placeholder="Password" aria-label="Password" autoComplete="current-password" required maxLength={72}/>
           <button className="btn" type="submit" disabled={busy}>{busy?"Checking…":"Continue"}</button>
         </form>
       </>}
@@ -65,7 +65,7 @@ export function AdminLogin(){
         <p>Open your authenticator app and type the current 6-digit code for <b>RK Associate</b>.</p>
       </>}
       {step!=="password"&&<form className="form" onSubmit={submitCode}>
-        <input name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]{6,7}" maxLength={7} placeholder="6-digit code" required autoFocus/>
+        <input name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]{6,7}" maxLength={7} placeholder="6-digit code" aria-label="6-digit code" required autoFocus/>
         <button className="btn" type="submit" disabled={busy}>{busy?"Checking…":step==="enroll"?"Finish setup & log in":"Log in"}</button>
         <button type="button" className="payCancel" onClick={cancel}>Cancel</button>
       </form>}
