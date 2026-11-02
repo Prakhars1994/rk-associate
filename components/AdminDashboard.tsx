@@ -101,7 +101,7 @@ export function AdminDashboard(){
   }
 
   if(session===undefined)return <section className="section"><p>Loading…</p></section>;
-  if(denied)return <section className="section studentAuth"><div className="formPanel"><span className="eyebrow">ADMIN</span><h1>No admin access</h1><p>This account no longer has admin access.</p><Link className="btn" href="/admin/login">Admin login</Link></div></section>;
+  if(denied)return <section className="section studentAuth"><div className="formPanel"><span className="eyebrow">ADMIN</span><h1>Please log in again</h1><p>Your admin session has ended or needs the two-step code again.</p><Link className="btn" href="/admin/login">Admin login</Link></div></section>;
   if(!session)return <section className="section"><p>Redirecting to admin login…</p></section>;
 
   const tiles:[string,string|number|undefined][]=[["New enquiries",stats?.new_enquiries],["Revenue",stats?rupees(stats.revenue_paise):undefined],["Paid enrolments",stats?.paid_enrollments],["Students",stats?.users],["Open tickets",stats?.open_tickets]];
