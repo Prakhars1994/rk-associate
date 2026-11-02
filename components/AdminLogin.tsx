@@ -36,6 +36,9 @@ export function AdminLogin(){
     setBusy(false);setMsg(r.message||"");
   }
 
+  // Two-step is optional until the API's ADMIN_REQUIRE_MFA switch is on; this lets an admin in on the password alone.
+  function skipSetup(){if(!pending)return;saveAdminSession({access_token:pending.access_token,expires_at:Math.floor(Date.now()/1000)+3000,email:pending.email,name:pending.name});location.assign("/admin")}
+
   async function cancel(){if(pending)await apiCall("/auth/logout",{body:{},token:pending.access_token});setPending(null);setSetup(null);setStep("password");setMsg("")}
 
   return <section className="section studentAuth adminAuth">
@@ -67,7 +70,7 @@ export function AdminLogin(){
       {step!=="password"&&<form className="form" onSubmit={submitCode}>
         <input name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]{6,7}" maxLength={7} placeholder="6-digit code" aria-label="6-digit code" required autoFocus/>
         <button className="btn" type="submit" disabled={busy}>{busy?"Checking…":step==="enroll"?"Finish setup & log in":"Log in"}</button>
-        <button type="button" className="payCancel" onClick={cancel}>Cancel</button>
+        {step==="enroll"&&<button type="button" className="payCancel" onClick={skipSetup}>Skip for now</button>}<button type="button" className="payCancel" onClick={cancel}>Cancel</button>
       </form>}
       {msg&&<p className="payNote" role="alert">{msg}</p>}
     </div>
